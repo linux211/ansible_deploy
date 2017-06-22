@@ -1,0 +1,23 @@
+
+- name: get os type
+  shell: egrep -o 'EulerOS|SUSE' /proc/version
+  sudo: yes 
+  register: os_type
+
+- name: modify EulerOS host name
+  shell: hostnamectl --static set-hostname {{hostname}}; sysctl kernel.hostname={{hostname}}
+  when: ("{{os_type.stdout}}" == "EulerOS")
+  sudo:  yes  
+  
+- name: modify SUSE host name
+  shell: sed -i '1d' /etc/HOSTNAME ; echo {{hostname}} > /etc/HOSTNAME ; sysctl kernel.hostname={{hostname}}
+  sudo: yes
+  when: ("{{os_type.stdout}}" != "EulerOS")
+  
+- name: remove host_ip host_name from /etc/hosts
+  shell: sed -i '/{{ansible_ssh_host}}\|{{hostname}}\|127.0.0.2/d' /etc/hosts
+  sudo: yes
+
+- name: echo host_ip host_name to /etc/hosts
+  shell: echo {{ansible_ssh_host}} {{hostname}} {{hostname}} >> /etc/hosts
+  sudo: yes 
