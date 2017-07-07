@@ -1,0 +1,11 @@
+---
+- include: ../../common/tasks/create_dir.yml target={{tmp_dir}}
+- include: ../../common/tasks/backup_file.yml source=/etc/ntp.conf target={{tmp_dir}}/ntp.conf_{{timestamp}}
+- include: ../../common/tasks/backup_file.yml source=/etc/crontab target={{tmp_dir}}/crontab_{{timestamp}}
+
+- include: mod_ntp.yml
+
+- include: restart_ntp.yml
+
+- include: update_cron.yml
+   
