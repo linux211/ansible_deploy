@@ -1,0 +1,20 @@
+---
+- name: set default
+  set_fact: ntp_command=ntp
+  
+- name: get os type
+  shell: egrep -o 'EulerOS|SUSE' /proc/version
+  sudo: yes 
+  register: os_type  
+ 
+- name: set command in EulerOS
+  set_fact: ntp_command=ntpd
+  when: ("{{os_type.stdout}}" == "EulerOS")
+
+- name: restart ntp
+  command: service {{ntp_command}} restart
+  sudo: yes
+
+- name: chkconfig ntp on
+  command: chkconfig {{ntp_command}} on
+  sudo: yes
