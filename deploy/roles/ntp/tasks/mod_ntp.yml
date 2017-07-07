@@ -1,0 +1,35 @@
+---
+- name: force synchronized with ntp server
+  shell: /usr/sbin/ntpdate -u {{ntp[0]}}
+  ignore_errors: true
+  sudo: yes
+  
+- name: force synchronized with ntp server
+  shell: /sbin/hwclock -w
+  ignore_errors: true
+  sudo: yes  
+
+- name: remove 127.127.1.0 items from /etc/ntp.conf
+  shell: sed -i 's/^server 127.127.1.0/#server 127.127.1.0/g' /etc/ntp.conf
+  sudo: yes
+  
+- name: check ntp.config
+  shell: cat /etc/ntp.conf  | grep ^server | awk '{print$2}'
+  register: ntp_items
+  sudo: yes
+
+- name: remove duplicate old ntp config from /etc/ntp.conf
+  shell: sed -i '/^server {{item}}\|^restrict {{item}}/d' /etc/ntp.conf
+  when: (ntp_items.stdout is defined and ntp_items.stdout_lines|length > 0)
+  with_items: '{{ntp_items.stdout_lines|default([])}}'
+  sudo: yes  
+
+- name: remove duplicate new ntp config from /etc/ntp.conf
+  shell: sed -i '/^server {{item}}\|^restrict {{item}}/d' /etc/ntp.conf
+  with_items: '{{ntp}}'
+  sudo: yes
+
+- name: echo ntp configuration to /etc/ntp.conf
+  shell: echo 'server {{item}} iburst' >> /etc/ntp.conf && echo 'restrict {{item}}' >> /etc/ntp.conf
+  with_items: '{{ntp}}'
+  sudo: yes
