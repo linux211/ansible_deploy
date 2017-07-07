@@ -1,0 +1,33 @@
+--- 
+- name: get os type
+  shell: egrep -o 'EulerOS|SUSE' /proc/version
+  sudo: yes 
+  register: os_type  
+
+- name: clear ntp cron job from /etc/crontab
+  shell: sed -i '/sbin\/hwclock\|usr\/sbin\/ntpdate/d' /etc/crontab
+  sudo: yes
+  
+- name: set cron job for ntp to /etc/crontab
+  shell: echo '*/10 * * * * root /sbin/hwclock -w' >> /etc/crontab
+  sudo: yes
+  
+# for crontab start the ntp and remove the previous way
+- name: remove ntp configuration from /etc/sudores
+  shell: sed -i "\/etc\/init.d\/ntp/d" /etc/sudoers ; sed -i "\/usr\/sbin\/ntpd/d" /etc/sudoers ; sed -ri  '/\/ntpd?\>/d' /etc/crontab
+  sudo: yes
+  
+- name: add ntp configuration for crontab
+  shell: echo '*/10 * * * * root /usr/sbin/ntpd' >> /etc/crontab
+  when: ("{{os_type.stdout}}" == "EulerOS")
+  sudo: yes 
+
+- name: add ntp configuration for crontab
+  shell: echo '*/10 * * * * root /etc/init.d/ntp start' >> /etc/crontab
+  when: ("{{os_type.stdout}}" == "SUSE")
+  sudo: yes    
+
+- name: restart crontab
+  command: service cron restart
+  ignore_errors: true
+  sudo: yes
