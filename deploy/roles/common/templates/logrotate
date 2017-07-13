@@ -1,0 +1,403 @@
+/opt/onframework/nginx/logs/error.log {
+su root
+create 0600 onframework onframework
+compress
+size 200M
+maxage {{log_remove_time_period}}
+rotate {{log_remove_time_period}}
+notifempty
+copytruncate
+missingok
+}
+
+/opt/onframework/nginx/logs/access.log {
+su root
+create 0600 root root
+compress
+size 200M
+maxage {{log_remove_time_period}}
+rotate {{log_remove_time_period}}
+notifempty
+copytruncate
+missingok
+}
+
+/var/log/console/install/silvan.log {
+su root
+create 0600 onframework onframework
+compress
+size 200M
+maxage {{log_remove_time_period}}
+rotate {{log_remove_time_period}}
+notifempty
+copytruncate
+missingok
+}
+
+/var/log/console/silvan/silvan.log {
+su root
+create 0600 onframework onframework
+compress
+size 200M
+maxage {{log_remove_time_period}}
+rotate {{log_remove_time_period}}
+notifempty
+copytruncate
+missingok
+}
+
+/var/log/console/monitor/ha.log {
+su root
+create 0600 onframework onframework
+compress
+size 200M
+maxage {{log_remove_time_period}}
+rotate {{log_remove_time_period}}
+notifempty
+copytruncate
+missingok
+}
+
+/var/log/console/monitor/silvan.log {
+su root
+create 0600 onframework onframework
+compress
+size 200M
+maxage {{log_remove_time_period}}
+rotate {{log_remove_time_period}}
+notifempty
+copytruncate
+missingok
+}
+
+/opt/apigateway/tomcat7059/logs/catalina.out{
+su root
+create 0600 apigateway apigateway
+compress
+size 200M
+maxage {{log_remove_time_period}}
+rotate {{log_remove_time_period}}
+notifempty
+missingok
+}
+
+/opt/apigateway/kafka/controller.log{
+su root
+create 0600 apigateway apigateway
+compress
+size 200M
+maxage {{log_remove_time_period}}
+rotate {{log_remove_time_period}}
+notifempty
+missingok
+}
+
+/opt/apigateway/kafka/state-change.log {
+su root
+create 0600 apigateway apigateway
+compress
+size 200M
+maxage {{log_remove_time_period}}
+rotate {{log_remove_time_period}}
+notifempty
+missingok
+}
+
+/opt/apigateway/kafka/server.log {
+su root
+create 0600 apigateway apigateway
+compress
+size 200M
+maxage {{log_remove_time_period}}
+rotate {{log_remove_time_period}}
+notifempty
+missingok
+}
+
+/var/log/apigateway/kafka/install.log {
+su root
+create 0600 apigateway apigateway
+compress
+size 200M
+maxage {{log_remove_time_period}}
+rotate {{log_remove_time_period}}
+notifempty
+copytruncate
+missingok
+}
+
+/var/log/apigateway/shubao/shubao.log {
+su root
+create 0600 apigateway apigateway
+compress
+size 200M
+maxage {{log_remove_time_period}}
+rotate {{log_remove_time_period}}
+notifempty
+copytruncate
+missingok
+}
+
+/var/log/apigateway/zookeeper/install.log {
+su root
+create 0600 apigateway apigateway
+compress
+size 200M
+maxage {{log_remove_time_period}}
+rotate {{log_remove_time_period}}
+notifempty
+copytruncate
+missingok
+}
+
+/var/log/apigateway/zookeeper/zookeeper.log {
+su root
+create 0600 apigateway apigateway
+compress
+size 200M
+maxage {{log_remove_time_period}}
+rotate {{log_remove_time_period}}
+notifempty
+copytruncate
+missingok
+}
+
+/var/log/apigateway/monitor/asgard.log {
+su root
+create 0600 apigateway apigateway
+compress
+size 200M
+maxage {{log_remove_time_period}}
+rotate {{log_remove_time_period}}
+notifempty
+copytruncate
+missingok
+}
+
+/var/log/apigateway/asgard.log {
+su root
+create 0600 apigateway apigateway
+compress
+size 200M
+maxage {{log_remove_time_period}}
+rotate {{log_remove_time_period}}
+notifempty
+copytruncate
+missingok
+}
+
+/var/log/apigateway/install/install_asgard.log {
+su root
+create 0600 apigateway apigateway
+compress
+size 200M
+maxage {{log_remove_time_period}}
+rotate {{log_remove_time_period}}
+notifempty
+copytruncate
+missingok
+}
+
+/opt/apigateway/tomcat7059/logs/* {
+su root
+create 0600 apigateway apigateway
+compress
+size 200M
+maxage {{log_remove_time_period}}
+rotate {{log_remove_time_period}}
+notifempty
+copytruncate
+missingok
+}
+
+
+/var/log/apigateway/kafka/logs/* {
+su root
+create 0600 apigateway apigateway
+compress
+size 200M
+maxage {{log_remove_time_period}}
+rotate {{log_remove_time_period}}
+notifempty
+copytruncate
+missingok
+}
+
+/var/log/apigateway/zookeeper/zookeeper.out {
+su root
+create 0600 apigateway apigateway
+compress
+size 200M
+maxage {{log_remove_time_period}}
+rotate {{log_remove_time_period}}
+notifempty
+copytruncate
+missingok
+}
+
+/var/log/apigateway/apigateway-access.log {
+su root
+create 0600 apigateway apigateway
+compress
+maxage {{log_remove_time_period}}
+rotate {{log_remove_time_period}}
+notifempty
+copytruncate
+missingok
+}
+
+/opt/apigateway/tomcat7059/logs/*.log {
+su root
+create 0600 apigateway apigateway
+compress
+size 200M
+maxage {{log_remove_time_period}}
+rotate {{log_remove_time_period}}
+notifempty
+copytruncate
+missingok
+}
+
+/opt/apigateway/tomcat7059/logs/*.txt {
+su root
+create 0600 apigateway apigateway
+compress
+size 200M
+maxage {{log_remove_time_period}}
+rotate {{log_remove_time_period}}
+notifempty
+copytruncate
+missingok
+}
+
+/var/log/ha/haChklog.log {
+su root
+create 0600 onframework onframework
+compress
+size 200M
+maxage {{log_remove_time_period}}
+rotate {{log_remove_time_period}}
+notifempty
+copytruncate
+missingok
+}
+
+/var/log/apigateway/operation.log {
+su root
+create 0600 apigateway apigateway
+compress
+size 200M
+maxage {{log_remove_time_period}}
+rotate {{log_remove_time_period}}
+notifempty
+copytruncate
+missingok
+}
+
+/opt/apigateway/kafka/logs/*.log {
+su root
+create 0600 apigateway apigateway
+compress
+size 200M
+maxage {{log_remove_time_period}}
+rotate {{log_remove_time_period}}
+notifempty
+copytruncate
+missingok
+}
+
+/opt/apigateway/tomcat/logs/*.log {
+su root
+create 0600 apigateway apigateway
+compress
+size 200M
+maxage {{log_remove_time_period}}
+rotate {{log_remove_time_period}}
+notifempty
+copytruncate
+missingok
+}
+
+/opt/apigateway/tomcat/logs/*.txt {
+su root
+create 0600 apigateway apigateway
+compress
+size 200M
+maxage {{log_remove_time_period}}
+rotate {{log_remove_time_period}}
+notifempty
+copytruncate
+missingok
+}
+
+/var/log/tomcat/* {
+su root
+create 0600 apigateway apigateway
+compress
+size 200M
+maxage {{log_remove_time_period}}
+rotate {{log_remove_time_period}}
+notifempty
+copytruncate
+missingok
+}
+
+/var/log/apigateway/apigateway.log {
+su root
+create 0600 apigateway apigateway
+compress
+size 500M
+maxage {{log_remove_time_period}}
+rotate {{log_remove_time_period}}
+notifempty
+copytruncate
+missingok
+}
+
+/var/log/nginx/access.log {
+su root
+create 0600 root root
+compress
+size 500M
+maxage {{log_remove_time_period}}
+rotate {{log_remove_time_period}}
+notifempty
+copytruncate
+missingok
+}
+
+/var/log/nginx/error.log {
+su root
+create 0600 root root
+compress
+size 500M
+maxage {{log_remove_time_period}}
+rotate {{log_remove_time_period}}
+notifempty
+copytruncate
+missingok
+}
+
+/var/log/apigateway/shubao/shubao-sh.log {
+su root
+create 0600 apigateway apigateway
+compress
+size 200M
+maxage {{log_remove_time_period}}
+rotate {{log_remove_time_period}}
+notifempty
+copytruncate
+missingok
+}
+
+/var/log/apigateway/sys_error.log {
+su root
+create 0600 apigateway apigateway
+compress
+size 200M
+maxage {{log_remove_time_period}}
+rotate {{log_remove_time_period}}
+notifempty
+copytruncate
+missingok
+}
