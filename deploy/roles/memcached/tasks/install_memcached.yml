@@ -1,0 +1,96 @@
+---
+- name: add sudo no password permission
+  lineinfile: dest={{common.etc_sudoer_path}} regexp='^{{common.user_console}} ALL=NOPASSWD:ALL' line='{{common.user_console}} ALL=NOPASSWD:ALL'
+  sudo: yes
+  tags:
+    - memcached_uninstall  
+ 
+- stat: path={{memcached.install_dir}}/install/
+  register: p 
+  tags:
+    - memcached_uninstall
+    - stop_memcached
+    
+- name: stop crontab
+  shell: service cron stop
+  when:  p.stat.isdir is defined and p.stat.isdir  
+  sudo: yes 
+  tags:
+    - stop_memcached    
+    
+#停止memcached服务
+- name: stop
+  shell: sh {{memcached.bin_dir}}/memcached_monitor.sh stop
+  when:  p.stat.isdir is defined and p.stat.isdir
+  ignore_errors: true
+  tags:
+    - memcached_uninstall  
+    - stop_memcached    
+
+#停止memcached服务
+- name: stop
+  shell: sh {{memcached.bin_dir}}/memcached_monitor.sh stop
+  when:  p.stat.isdir is defined and p.stat.isdir
+  ignore_errors: true
+  tags:
+    - memcached_uninstall
+
+#卸载memcached
+- name: uninstall memcached
+  shell: sh {{memcached.install_dir}}/install/uninstall_memcached.sh
+  when:  p.stat.isdir is defined and p.stat.isdir
+  ignore_errors: true
+  sudo: yes
+  tags:
+    - memcached_uninstall
+    
+- name: create log dir
+  sudo: yes
+  file: path={{common.console_log}} state=directory owner={{ansible_ssh_user}} group={{ansible_ssh_user}} mode=700    
+
+#拷贝memcached安装包
+- name: upload memcached package
+  copy: src={{memcached.pkg_dir}}/{{memcached.pkg_name}} dest={{common.home_dir}} force=yes
+  
+#解压memcached目录
+- name: untar memcached
+  unarchive: src={{common.home_dir}}/{{memcached.pkg_name}} dest={{memcached.untar_dir}} copy=no
+
+#修改安装脚本
+- name: config memcached ip
+  lineinfile: dest={{memcached.install_script_file}} regexp='^memcached_ip=' line='memcached_ip={{ansible_ssh_host}}'
+
+- name: config memcached port
+  lineinfile: dest={{memcached.install_script_file}} regexp='^memcached_port=' line='memcached_port={{common.memcache_port}}'
+
+#安装脚本dos2unix转换
+- name: dos2unix trans install script
+  shell: dos2unix {{memcached.install_dir}}/install/*.sh
+
+#启动脚本dos2unix转换
+- name: dos2unix trans bin script
+  shell: dos2unix {{memcached.bin_dir}}/*.sh
+
+#执行安装脚本
+- name: install memcached
+  shell: sh install_memcached.sh
+  sudo: yes
+  args:
+    chdir: '{{memcached.install_dir}}/install'
+
+- name: delete sudo NOPASSWORD 
+  shell: sed -i "/{{common.user_console}} ALL=NOPASSWD:ALL/d" {{common.etc_sudoer_path}}
+  sudo: yes
+  tags:
+    - memcached_uninstall
+  
+- name: remove source tar
+  file: path={{common.home_dir}}/{{memcached.pkg_name}} state=absent    
+
+#启动memcached
+- name: start
+  shell: sh memcached_monitor.sh restart
+  args:
+    chdir: '{{memcached.bin_dir}}'
+  tags:
+    - memcached_restart

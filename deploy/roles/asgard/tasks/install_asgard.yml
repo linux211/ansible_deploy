@@ -1,0 +1,88 @@
+---
+
+- name: add sudo no password permission
+  lineinfile: dest=/etc/sudoers  regexp='^{{common.user_apigateway}} ALL=NOPASSWD:ALL' line='{{common.user_apigateway}} ALL=NOPASSWD:ALL'
+  sudo: yes
+  tags:
+    - asgard_uninstall  
+
+- name: create log dir
+  sudo: yes
+  file: path={{common.apigateway_log}} state=directory owner={{ansible_ssh_user}} group={{ansible_ssh_user}} mode=700   
+ 
+- stat: path=/opt/{{common.user_apigateway}}/asgard
+  register: p  
+  tags:
+    - asgard_uninstall
+    - stop_asgard       
+    
+- name: stop asgard crontab
+  shell: service cron stop
+  when:  p.stat.isdir is defined and p.stat.isdir  
+  sudo: yes 
+  tags:
+    - asgard_uninstall 
+    - stop_asgard    
+
+- name: asgard stop
+  shell: sh asgard_monitor.sh stop
+  when:  p.stat.isdir is defined and p.stat.isdir
+  ignore_errors: true
+  args:
+    chdir: '/opt/{{common.user_apigateway}}/asgard/bin/' 
+  tags:
+    - asgard_uninstall
+    - stop_asgard
+
+
+- name: asgard uninstall
+  shell: cd /opt/{{common.user_apigateway}}/asgard/install/   sh uninstall_asgard.sh
+  when:  p.stat.isdir is defined and p.stat.isdir
+  ignore_errors: true
+  tags:
+    - asgard_uninstall
+
+- name: remove asgard dir
+  file: path=/opt/{{common.user_apigateway}}/asgard  state=absent
+  ignore_errors: true
+  sudo: yes  
+  tags:
+    - asgard_uninstall
+
+- name: upload asgard package
+  copy: src={{asgard.pkg_dir}}/{{asgard.pkg_name}} dest=/opt/{{common.user_apigateway}} force=yes
+  
+- name: untar asgard package
+  unarchive: src=/opt/{{common.user_apigateway}}/{{asgard.pkg_name}} dest=/opt/{{common.user_apigateway}}  copy=no
+  
+- name: config asgard.conf
+  template: src=asgard.conf dest=/opt/{{common.user_apigateway}}/asgard/install
+ 
+- name: install
+  shell: sh /opt/{{common.user_apigateway}}/asgard/install/install_asgard.sh
+  ignore_errors: true
+  
+- name: config application.properties
+  template: src=application.properties dest=/opt/{{common.user_apigateway}}/asgard/config
+  
+- name: config log4j
+  template: src=log4j.properties dest=/opt/{{common.user_apigateway}}/asgard/config  
+
+- name: rm asgard package
+  shell: rm -rf /opt/{{common.user_apigateway}}/{{asgard.pkg_name}}
+  
+- name: delete sudo NOPASSWORD 
+  shell: sed -i "/{{common.user_apigateway}} ALL=NOPASSWD:ALL/d" /etc/sudoers
+  sudo: yes
+  tags:
+    - asgard_uninstall  
+    
+- name: restart crontab
+  shell: service cron restart
+  sudo: yes    
+ 
+- name: asgard restart
+  shell: sh /opt/{{common.user_apigateway}}/asgard/bin/asgard_monitor.sh restart
+  ignore_errors: true  
+  tags:
+    - asgard_restart

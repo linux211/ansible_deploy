@@ -1,0 +1,17 @@
+### check cpu ###
+- name: get cpu result
+  shell: cat /proc/cpuinfo | grep processor | wc -l
+  register: cpu_result
+  sudo: yes
+
+- name: debug cpu result
+  debug: msg="cpu result is {{cpu_result.stdout}}"
+
+### check memory ###
+- name: get memory result
+  shell: free -g | awk '{print $2}'| awk 'NR==2 {print}'
+  register: mem_result
+  sudo: yes
+
+- name: debug memory result
+  debug: msg="memory result is {{mem_result.stdout}} G"

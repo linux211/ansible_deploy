@@ -1,0 +1,15 @@
+---
+
+### check disk ###
+- name: get /opt disk volume
+  shell: df -hT | grep /opt | awk '{print $3}' | awk 'NR==1 {print}' | awk '{print substr($0,0,length($0-1))}'
+  register: opt_disk_volume
+
+- name: debug /opt volume
+  debug: msg="/opt volume is {{opt_disk_volume.stdout}}G"
+
+## the directory of /opt available space  more than 20G
+- name: check /opt total volume > 20G
+  assert:
+    that:
+      - "{{opt_disk_volume.stdout | int}} > 20"  

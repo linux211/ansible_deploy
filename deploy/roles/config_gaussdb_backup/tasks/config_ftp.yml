@@ -1,0 +1,20 @@
+
+- name: config ftp address
+  lineinfile: dest={{gaussdb.backup_config_file}} regexp='^FTP_SERVER_IP:' line='FTP_SERVER_IP:{{g_ftp.ip}}'
+  sudo: yes
+ 
+- name: config ftp port
+  lineinfile: dest={{gaussdb.backup_config_file}}  regexp='^FTP_SERVER_PORT:' line='FTP_SERVER_PORT:{{g_ftp.port}}'
+  sudo: yes  
+  
+- name: config ftp user
+  lineinfile: dest={{gaussdb.backup_config_file}}  regexp='^FTP_SERVER_USER:' line='FTP_SERVER_USER:{{g_ftp.user}}'
+  sudo: yes  
+  
+- name: config ftp password
+  lineinfile: dest={{gaussdb.backup_config_file}} regexp='^FTP_SERVER_PASSWD:' line='FTP_SERVER_PASSWD:{{data_backup.ftp.server_passwd}}'
+  sudo: yes  
+  
+- name: config ftp server path
+  lineinfile: dest={{gaussdb.backup_config_file}} regexp='^FTP_SERVER_FILEPATH:' line='FTP_SERVER_FILEPATH:{{data_backup.ftp.server_filepath}}'
+  sudo: yes  

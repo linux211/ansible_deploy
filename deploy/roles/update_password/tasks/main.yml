@@ -1,0 +1,11 @@
+---
+
+- name: chanage user password
+  when:  "'{{modify_user}}'!= 'root'"
+  user: name={{ansible_ssh_user}} update_password=always password={{modify_crypt_passwd}}
+  sudo: yes
+  
+- name: chanage root password
+  when:  "'{{modify_user}}'== 'root'"
+  user: name=root update_password=always password={{modify_crypt_passwd}}
+  sudo: yes  

@@ -1,0 +1,24 @@
+
+- stat: path=/opt/{{common.user_apigateway}}/zookeeper/arb/install
+  register: p_arb
+  tags:
+    - arb_uninstall
+
+- name: uninstall arb
+  shell: sh /opt/{{common.user_apigateway}}/zookeeper/arb/install/arb_uninstall.sh
+  when:  p_arb.stat.isdir is defined and p_arb.stat.isdir
+  ignore_errors: true
+  tags:
+    - arb_uninstall
+
+- name: config arb
+  template: src=arb_install.cfg dest=/opt/{{common.user_apigateway}}/zookeeper/arb/install/
+  
+- name: install arb
+  shell: sh arb_install.sh 
+  args:
+    chdir: '/opt/{{common.user_apigateway}}/zookeeper/arb/install/'  
+    
+- name: delete sudo crontab config 
+  shell: sed -i "/start_zookeeper ALL=NOPASSWD:ALL/d" /etc/crontab
+  sudo: yes

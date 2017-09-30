@@ -1,0 +1,19 @@
+---
+- name: make ftp dir
+  file: path=/opt/{{common.user_console}}/ftp force=true state=directory
+
+- name: copy libgnutls rpm to remote machine
+  copy: src=libgnutls26-2.4.1-24.39.55.1.x86_64.rpm dest=/opt/{{common.user_console}}/ftp/libgnutls.rpm mode=700 owner={{common.user_console}} group={{common.user_console}}
+
+- name: copy lftp rpm to remote machine
+  copy: src=lftp-4.3.7-37.1.x86_64.rpm dest=/opt/{{common.user_console}}/ftp/lftp.rpm mode=0700 owner={{common.user_console}} group={{common.user_console}}
+
+- name: copy addFTP script to remote machine
+  template: src=addFtpFunc.sh dest=/opt/{{common.user_console}}/ftp/ mode=0700 owner={{common.user_console}} group={{common.user_console}}
+
+- name: run addFTP script
+  shell: '/opt/{{common.user_console}}/ftp/addFtpFunc.sh'
+  sudo: yes
+
+- name: delete addFTP script file
+  file: path=/opt/{{common.user_console}}/ftp force=true state=absent

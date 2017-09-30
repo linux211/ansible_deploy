@@ -1,0 +1,33 @@
+- name: config logrotate
+  template: src=logrotate  dest=/etc/logrotate.d/ mode='0640' force=yes
+  sudo: yes
+  tags: config_logrotate_log  
+
+- name: rm old script
+  file: path=/etc/cron.daily/auto-del-90-days-log.sh  state=absent
+  sudo: yes
+  ignore_errors: true
+  tags: config_logrotate_log
+
+- name: rm old sizerotate
+  shell: sed -i '/sizerotate.sh/d' /etc/crontab
+  sudo: yes
+  ignore_errors: true
+  tags: config_logrotate_log
+
+- name: rm old size script
+  file: path=/etc/logrotate.d/sizerotate  state=absent
+  sudo: yes
+  ignore_errors: true
+  tags: config_logrotate_log
+
+- name: config auto del
+  template: src=auto-del-90-days-log.sh  dest=/etc/cron.hourly/ mode='u+x,g+x,o+x' force=yes
+  sudo: yes
+  tags: config_logrotate_log
+
+- name: set cronset
+  shell: sed -i '/root \/usr\/sbin\/logrotate \/etc\/logrotate.d\/logrotate/d' /etc/crontab;echo '*/1 * * * * root /usr/sbin/logrotate /etc/logrotate.d/logrotate' >> /etc/crontab
+  sudo: yes
+  ignore_errors: true
+  tags: config_logrotate_log

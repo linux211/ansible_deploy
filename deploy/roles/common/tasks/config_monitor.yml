@@ -1,0 +1,31 @@
+- name: create the tool dir
+  file: path=/opt/tools state=directory
+  sudo: yes
+  tags:
+    - config_opsmonitor 
+
+- name: upload ha monitor
+  template: src=ha_monitor.sh  dest=/opt/tools mode='u+x,g+x,o+x' force=yes
+  when: "'{{component|default()}}'=='nginx' or '{{component|default()}}'=='silvan'"
+  sudo: yes
+  tags:
+    - config_opsmonitor   
+  
+- name: upload service_healthCheck.sh
+  template: src=service_healthCheck.sh  dest=/opt/tools mode='u+x,g+x,o+x' force=yes
+  sudo: yes 
+  tags:
+    - config_opsmonitor   
+ 
+- stat: path=/home/zabbix/etc
+  register: p_zabbix_conf
+  sudo: yes   
+  tags:
+    - config_opsmonitor   
+
+- name: config opsmonitor
+  include: ./modify_opsmonitor.yml   
+  when: p_zabbix_conf.stat.isdir is defined and p_zabbix_conf.stat.isdir
+  sudo: yes
+  tags:
+    - config_opsmonitor

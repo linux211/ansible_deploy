@@ -1,0 +1,23 @@
+---
+
+- stat: path=/opt/{{common.user_apigateway}}/{{etl.backup_name}}
+  register: etl_pkg
+  
+- name: backup action
+  include: backup_etl.yml
+  when: (etl is defined and etl.stat.exists == false)
+ 
+- name: fetch the modify date
+  shell: stat {{etl.backup_name}}|awk -F'[ .]' '/Modify/{print $2" "$3}'
+  args:
+    chdir: 
+        '/opt/{{common.user_apigateway}}'  
+  register: p_date 
+
+- name: print the result msg
+  debug: msg="Backup shubao succ. the file create time is {{p_date.stdout}}"
+  when: (etl_pkg is defined and etl_pkg.stat.exists == false)   
+  
+- name: print the result msg
+  debug: msg="The shubao backup package is already exist, the file create time is {{p_date.stdout}}"
+  when: (etl_pkg is defined and etl_pkg.stat.exists)

@@ -1,0 +1,54 @@
+- hosts: memcached
+  remote_user: '{{common.user_console}}'
+  roles:
+    - memcached
+    
+- hosts: nginx
+  remote_user: '{{common.user_console}}'
+  roles:
+    - nginx 
+    - ha_nginx 
+
+- hosts: silvan
+  remote_user: '{{common.user_console}}'
+  roles:
+    - silvan
+
+- hosts: asgard
+  remote_user: '{{common.user_apigateway}}'
+  roles:
+    - asgard
+    
+- hosts: cassandra
+  remote_user: '{{common.user_apigateway}}'
+  roles:
+    - cassandra     
+    - etl   
+    
+- hosts: kafka
+  remote_user: '{{common.user_apigateway}}'
+  roles:
+    - kafka
+    - zookeeper
+    
+- hosts: shubao
+  remote_user: '{{common.user_apigateway}}'
+  roles:
+    - apigateway
+    - tomcat
+    - shubao_go
+
+      
+- hosts: common_onframework
+  remote_user: '{{common.user_console}}'
+  roles:
+    - jdk
+    - cancel_root
+    - common_clean 
+
+- hosts: common_apigateway
+  remote_user: '{{common.user_apigateway}}'
+  roles:
+    - jdk
+    - cancel_root
+    - common_clean 

@@ -1,0 +1,7 @@
+---
+
+- hosts: ha_nginx_pod_shubao
+  roles:
+    - ha_nginx
+  tags:
+    - ha_uninstall

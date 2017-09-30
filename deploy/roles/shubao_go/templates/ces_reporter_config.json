@@ -1,0 +1,11 @@
+{
+  "interval": 15,
+  "cassandraTtl": 604800,
+  "cesReporterTtl": 172800,
+  "fault_tolerant":3,
+  "ces_endpoint":"https://{{g_current_region.ces.api_apigateway}}",
+  "ces_metric_uri":"/V1.0/{projectId}/metric-data",
+  "ces_token_uri":"/v3/auth/tokens",
+  "ces_namespace":"SYS.APIGATEWAY",
+  "ces_batch_size":100
+}

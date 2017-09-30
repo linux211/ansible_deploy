@@ -1,0 +1,351 @@
+---
+- hosts: memcached
+  remote_user: '{{common.user_console}}'
+  gather_facts: False    
+  roles:
+    - jdk
+    - memcached
+    - ntp
+    - dns
+    - common    
+  tags:
+    - memcached
+    
+- hosts: kafka
+  remote_user: '{{common.user_apigateway}}'
+  gather_facts: False  
+  roles:
+    - get_zk_ip_addr 
+  tags:
+    - get_zk_ip_addr    
+  
+- hosts: kafka
+  remote_user: '{{common.user_apigateway}}'
+  gather_facts: False  
+  roles:
+    - jdk
+    - zookeeper 
+  tags:
+    - zookeeper
+  
+- hosts: kafka
+  remote_user: '{{common.user_apigateway}}'
+  gather_facts: False    
+  roles:
+    - jdk
+    - kafka
+    - dns    
+    - ntp
+    - common    
+  tags:
+    - kafka
+    
+- hosts: kafka
+  remote_user: '{{common.user_apigateway}}'
+  gather_facts: False    
+  roles:
+    - jdk
+    - zookeeper    
+    - kafka
+    - dns    
+    - ntp
+    - common
+  tags:
+    - zk_kfk
+
+- hosts: cassandra
+  remote_user: '{{common.user_apigateway}}'
+  gather_facts: False    
+  roles:
+    - jdk  
+    - cassandra
+    - etl
+    - cassandra_init    
+    - dns    
+    - ntp
+    - common
+  tags:
+    - cassandra     
+    
+- hosts: asgard
+  remote_user: '{{common.user_apigateway}}'
+  gather_facts: False  
+  roles:
+    - jdk
+    - asgard
+    - dns    
+    - ntp
+    - common    
+  tags:
+    - asgard
+
+- hosts: shubao
+  remote_user: '{{common.user_apigateway}}'
+  gather_facts: False  
+  roles:
+    - shubao_go 
+    - dns    
+    - ntp
+    - common      
+  tags:
+    - shubao 
+      
+- hosts: silvan
+  remote_user: '{{common.user_console}}'
+  gather_facts: False    
+  roles:
+    - jdk
+    - silvan
+    - dns    
+    - ntp
+    - common    
+  tags:
+    - silvan 
+    
+- hosts: silvan
+  remote_user: '{{common.user_console}}'
+  gather_facts: False  
+  roles:
+    - config_gaussdb_backup
+  tags:
+    - config_db_backup     
+    
+- hosts: nginx
+  remote_user: '{{common.user_console}}'
+  gather_facts: False  
+  roles:
+    - jdk
+    - nginx
+    - dns    
+    - ntp
+    - common      
+  tags:
+    - nginx  
+
+- hosts: common_onframework
+  remote_user: '{{common.user_console}}'
+  roles:
+    - dns  
+    - ntp
+    - common
+  tags:
+    - common
+    
+- hosts: common_apigateway
+  remote_user: '{{common.user_apigateway}}'
+  gather_facts: False
+  roles:
+    - dns  
+    - ntp
+    - common
+  tags:
+    - common   
+
+- hosts: common_onframework
+  remote_user: '{{common.user_console}}'
+  gather_facts: False
+  roles:
+    - dns
+  tags:
+    - dns
+    
+- hosts: common_apigateway
+  remote_user: '{{common.user_apigateway}}'
+  gather_facts: False
+  roles:
+    - dns
+  tags:
+    - dns
+
+- hosts: common_onframework
+  remote_user: '{{common.user_console}}'
+  gather_facts: False
+  roles:
+    - ntp
+  tags:
+    - ntp
+    
+- hosts: common_apigateway
+  remote_user: '{{common.user_apigateway}}'
+  gather_facts: False
+  roles:
+    - ntp
+  tags:
+    - ntp     
+
+- hosts: initsysuser
+  remote_user: '{{common.root_user}}'
+  gather_facts: False
+  roles:
+    - initsysuser
+  tags:
+    - initsysuser
+    
+- hosts: common
+  gather_facts: False
+  roles:
+    - update_password
+  tags:
+    - update_password    
+
+- hosts: initsysuser
+  remote_user: '{{common.root_user}}'
+  gather_facts: False
+  roles:
+    - initsystem
+  tags:
+    - initsystem 
+
+- hosts: common_apigateway
+  remote_user: '{{common.user_apigateway}}'
+  gather_facts: False
+  roles:
+    - jdk
+  tags:
+    - jdk
+    
+- hosts: common_onframework
+  remote_user: '{{common.user_console}}'
+  gather_facts: False
+  roles:
+    - jdk
+  tags:
+    - jdk 
+    
+- hosts: ha_nginx_shubao
+  remote_user: '{{common.user_console}}'
+  gather_facts: False
+  roles:
+    - ha_info
+  tags:
+    - ha_info_shubao
+
+- hosts: ha_nginx_shubao
+  remote_user: '{{common.user_console}}'
+  gather_facts: False
+  roles:
+    - ha_nginx
+  tags:
+    - ha_nginx_shubao
+
+- hosts: ha_nginx_silvan
+  remote_user: '{{common.user_console}}'
+  gather_facts: False
+  roles:
+    - ha_info
+  tags:
+    - ha_info_silvan    
+
+- hosts: ha_nginx_silvan
+  remote_user: '{{common.user_console}}'
+  gather_facts: False
+  roles:
+    - ha_nginx
+  tags:
+    - ha_nginx_silvan
+
+- hosts: ha_nginx_pod_shubao
+  remote_user: '{{common.user_console}}'
+  gather_facts: False
+  roles:
+    - ha_info
+  tags:
+    - ha_info_pod_shubao
+
+- hosts: ha_nginx_pod_shubao
+  remote_user: '{{common.user_console}}'
+  gather_facts: False
+  roles:
+    - ha_nginx
+    - config_network
+  tags:
+    - ha_nginx_pod_shubao
+    
+ 
+- hosts: common_onframework
+  remote_user: '{{common.user_console}}'
+  gather_facts: False
+  roles:
+    - health_check
+  tags:
+    - health_check
+    
+- hosts: common_apigateway
+  remote_user: '{{common.user_apigateway}}'
+  gather_facts: False
+  roles:
+    - health_check
+  tags:
+    - health_check  
+    
+- hosts: common_onframework
+  remote_user: '{{common.user_console}}'
+  gather_facts: False
+  roles:
+    - base_check
+  tags:
+    - base_check
+    
+- hosts: common_apigateway
+  remote_user: '{{common.user_apigateway}}'
+  gather_facts: False
+  roles:
+    - base_check
+  tags:
+    - base_check    
+    
+- hosts: common_onframework
+  remote_user: '{{common.user_console}}'
+  gather_facts: False
+  roles:
+    - cancel_root
+  tags:
+    - cancel_root    
+
+- hosts: common_apigateway
+  remote_user: '{{common.user_apigateway}}'
+  gather_facts: False
+  roles:
+    - cancel_root
+  tags:
+    - cancel_root
+
+- hosts: common_onframework
+  remote_user: '{{common.user_console}}'
+  gather_facts: False
+  roles:
+    - before_deploy
+  tags:
+    - before_deploy    
+
+- hosts: common_apigateway
+  remote_user: '{{common.user_apigateway}}'
+  gather_facts: False
+  roles:
+    - before_deploy
+  tags:
+    - before_deploy  
+    
+- hosts: common_onframework
+  remote_user: '{{common.user_console}}'
+  gather_facts: False
+  roles:
+    - elk
+  tags:
+    - elk    
+
+- hosts: common_apigateway
+  remote_user: '{{common.user_apigateway}}'
+  gather_facts: False
+  roles:
+    - elk
+  tags:
+    - elk    
+
+- hosts: 127.0.0.1
+  connection: local
+  gather_facts: False
+  roles:
+    - check_var
+  tags:
+    - check_var

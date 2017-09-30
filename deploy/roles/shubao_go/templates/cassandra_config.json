@@ -1,0 +1,11 @@
+{
+  "keyspace":"apigateway",
+  "connection_nums":8,
+  "hosts":"{{cassandra.hosts | join(',')}}",
+  "port":9042,
+  "connection_timeOut":6000,
+  "user_name":"onframework",
+  "mistery":"cassandra_mistery",
+  "session_retry_times":2,
+  "session_retry_duration":5
+}

@@ -1,0 +1,94 @@
+---
+- hosts: common_apigateway
+  remote_user: '{{common.user_apigateway}}'
+  gather_facts: False  
+  roles:
+    - jdk
+  tags:
+    - jdk
+    
+- hosts: common_onframework
+  remote_user: '{{common.user_console}}'
+  gather_facts: False
+  roles:
+    - jdk
+  tags:
+    - jdk
+
+- hosts: memcached
+  remote_user: '{{common.user_console}}'
+  gather_facts: False
+  roles:
+    - memcached
+  tags:
+    - memcached
+
+- hosts: kafka
+  remote_user: '{{common.user_apigateway}}'
+  gather_facts: False
+  roles:
+    - zookeeper
+    - kafka
+  tags:
+    - mq
+    
+- hosts: cassandra
+  remote_user: '{{common.user_apigateway}}'
+  gather_facts: False
+  roles:
+    - cassandra
+    - etl
+    - cassandra_init
+
+- hosts: asgard
+  remote_user: '{{common.user_apigateway}}'
+  gather_facts: False
+  roles:
+    - asgard
+  tags:
+    - asgard
+
+- hosts: shubao
+  remote_user: '{{common.user_apigateway}}'
+  gather_facts: False
+  roles:  
+    - shubao_go
+  tags:
+    - shubao_go
+ 
+- hosts: silvan
+  remote_user: '{{common.user_console}}'
+  gather_facts: False
+  roles:
+    - silvan
+  tags:
+    - silvan    
+
+- hosts: nginx
+  remote_user: '{{common.user_console}}'
+  roles:
+    - nginx
+  tags:
+    - nginx
+    
+- hosts: common_apigateway
+  remote_user: '{{common.user_apigateway}}'
+  gather_facts: False
+  roles:
+    - dns
+    - ntp
+    - common
+    - common_clean
+  tags:
+    - common
+    
+- hosts: common_onframework
+  remote_user: '{{common.user_console}}'
+  gather_facts: False
+  roles:
+    - dns
+    - ntp
+    - common
+    - common_clean
+  tags:
+    - common

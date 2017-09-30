@@ -1,0 +1,28 @@
+---
+- name: cancel allow user 
+  shell: sed -ri "s#(PermitRootLogin without-password)(.*)#PermitRootLogin yes#" /etc/ssh/sshd_config; 
+         sed -ri "s#(\#PermitRootLogin without-password)(.*)#PermitRootLogin yes#" /etc/ssh/sshd_config; 
+         sed -ri "s#(PermitRootLogin no)(.*)#PermitRootLogin yes#" /etc/ssh/sshd_config; 
+         sed -ri "s#(\#PermitRootLogin no)(.*)#PermitRootLogin yes#" /etc/ssh/sshd_config; 
+  sudo: yes 
+  tags:
+    - cancel_root  
+  
+  
+  
+- name: cancel ssh permit
+  shell:  sed -i '/AllowUsers/d' /etc/ssh/sshd_config;  sed -i '/AllowGroups/d' /etc/ssh/sshd_config; service sshd restart;
+  sudo: yes 
+  tags:
+    - cancel_root  
+    
+- name: rm bash_history
+  shell: rm -rf ~/.bash_history
+  tags:
+    - cancel_root  
+    
+- name: history -c
+  shell: history -c
+  tags:
+    - cancel_root    
+

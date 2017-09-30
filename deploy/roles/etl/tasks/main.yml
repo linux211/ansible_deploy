@@ -1,0 +1,6 @@
+- stat: path={{etl.home}}
+  register: p_check 
+  
+- name: install component
+  include: install_etl.yml
+  when:  ( (is_check_installed is not defined) or (p_check.stat is not defined) or (p_check.stat.exists == false) ) 

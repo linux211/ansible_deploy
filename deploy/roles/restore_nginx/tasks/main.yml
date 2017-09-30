@@ -1,0 +1,43 @@
+
+- stat: path={{common.home_dir}}/{{nginx.backup_name}}
+  register: p_pkg
+  sudo: yes    
+
+- name: check backup file is exist
+  sudo: yes  
+  assert:
+    that:
+      - "p_pkg is defined and p_pkg.stat.exists"  
+
+- name: rename nginx
+  shell: mv {{common.home_dir}}/nginx {{common.home_dir}}/nginx_back
+  sudo: yes  
+  tags: 
+   - nginx_restore  
+
+- name: unzip nginx
+  shell: tar zxvf {{nginx.backup_name}}
+  sudo: yes   
+  args:
+    chdir: '{{common.home_dir}}'
+  tags: 
+   - nginx_restore
+  sudo: yes   
+   
+- name: restart nginx
+  shell: sh nginx_monitor.sh  restart
+  args:
+    chdir: '{{common.home_dir}}/nginx/bin'
+  sudo: yes 
+  ignore_errors: true  
+  tags: 
+    - nginx_restore    
+
+- name: remove nginx back
+  shell: rm -r  {{common.home_dir}}/nginx_back
+  when: "'{{component}}'== 'nginx'"
+  tags: 
+   - nginx_restore  
+  sudo: yes   
+    
+  

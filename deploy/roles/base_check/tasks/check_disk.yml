@@ -1,0 +1,31 @@
+### check disk ###
+- name: get /opt disk volume
+  shell: df -h|awk '$1~/\dev\/[a-z][a-z][a-z][b-z]/&&$6~/\/opt$/{print substr($4,0,length($4)-1)}'
+  register: opt_disk_volume
+  sudo: yes
+
+- name: debug /opt volume
+  debug: msg="/opt volume is {{opt_disk_volume.stdout}}G"
+
+- name: get /opt disk volume Use%
+  shell: df -h|awk '$1~/\dev\/[a-z][a-z][a-z][b-z]/&&$6~/\/opt$/{print substr($5,0,length($5)-1)}'
+  register: opt_disk_volume_use
+
+- name: debug /opt volume Use%
+  debug: msg="/opt volume Use% is {{opt_disk_volume_use.stdout}}%"
+
+- name: get /var/log disk volume
+  shell: df -h|awk '$1~/\dev\/[a-z][a-z][a-z][b-z]/&&$6~/\/var\/log$/||$6~/\/var\/log\/apigateway$/||$6~/\/var\/log\/console/{print substr($4,0,length($4)-1)}'
+  register: var_log_apigateway_disk_volume
+  sudo: yes  
+
+- name: debug total /var/log volume
+  debug: msg="/var/log volume is {{var_log_apigateway_disk_volume.stdout}}G"
+
+- name: get /var/log disk volume Use%
+  shell: df -h|awk '$1~/\dev\/[a-z][a-z][a-z][b-z]/&&$6~/\/var\/log$/||$6~/\/var\/log\/apigateway$/||$6~/\/var\/log\/console/{print substr($5,0,length($5)-1)}'
+  register: var_log_apigateway_disk_volume_use
+  sudo: yes
+
+- name: debug /var/log volume Use%
+  debug: msg="/var/log/ volume Use% is {{var_log_apigateway_disk_volume_use.stdout}}%"

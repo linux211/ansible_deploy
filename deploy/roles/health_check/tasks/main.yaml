@@ -1,0 +1,55 @@
+- name: check shell dir exist.
+  stat: path={{tmp_dir}}
+  register: tmpdir
+  tags:
+    - clean
+    - health_check
+    
+# clean the tmp dir before upgrade
+- name: clean the tmp
+  shell: rm -rf /tmp/*
+  ignore_errors: true  
+  sudo: yes    
+    
+- name: If shell dir exist, rm it.
+  file: path={{tmp_dir}} state=absent force=true
+  when: tmpdir.stat.isdir is defined and tmpdir.stat.isdir
+  tags:
+    - clean
+    - health_check
+
+- name: create shell dir
+  file: path={{tmp_dir}} state=directory mode=0700 recurse=true
+  tags:
+    - health_check  
+
+- name: transfer check_status 
+  template: src=check_status dest={{tmp_dir}}/check_status.sh mode=0500 
+  tags:
+    - health_check    
+  
+- name: get health check result
+  shell: sh {{tmp_dir}}/check_status.sh
+  register: checkResult
+  tags:
+    - health_check    
+
+- name: print check Result when faild
+  shell: cat {{tmp_dir}}/checkResult
+  register: result_log
+  when: checkResult.stdout is defined and checkResult.stdout == 'False'
+  tags:
+    - health_check    
+
+- name: debug check result
+  debug: msg="Failure log is {{result_log.stdout_lines}}"
+  ignore_errors: true  
+  when: checkResult.stdout is defined and checkResult.stdout == 'False' and result_log.stdout_lines is defined
+  tags:
+    - health_check    
+
+- fail: msg="Failure log is {{result_log.stdout_lines}}"
+  ignore_errors: true  
+  when: checkResult.stdout is defined and checkResult.stdout == 'False' and result_log.stdout_lines is defined
+  tags:
+    - health_check

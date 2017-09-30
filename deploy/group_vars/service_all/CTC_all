@@ -1,0 +1,7 @@
+
+---
+config_file_folder: CTC
+
+nginx_ssl_protocols: TLSv1.2
+
+nginx_ssl_ciphers: 'AES128-SHA:AES256-SHA:AES128-SHA256:AES256-SHA256:HIGH:!MEDIUM:!LOW:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4:@STRENGTH'

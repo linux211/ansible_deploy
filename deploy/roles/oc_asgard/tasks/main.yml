@@ -1,0 +1,5 @@
+
+- name: config asgard
+  include: "oc_asgard.yml"
+  tags:
+    - config_asgard_oc

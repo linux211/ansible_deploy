@@ -1,0 +1,46 @@
+---
+
+- stat: path={{apigateway.script_home}}/conf
+  register: p
+  tags:
+    - shubao_go_backup
+    
+- name: backup shubao go
+  include: ./backup_shubao_go.yml
+  when:  p.stat.isdir is defined and p.stat.isdir
+  tags:
+    - shubao_go_backup
+
+- stat: path={{tomcat.new_secas_dir}}
+  register: p_new_tomcat
+  tags:
+    - apigateway_backup  
+
+- stat: path={{tomcat.new_dir}}
+  register: p_old_tomcat
+  tags:
+    - apigateway_backup    
+  
+- name: set default tomcat dir
+  set_fact: tomcat_home="is_exist_tomcat"
+  tags:
+    - apigateway_backup 
+
+- name: set tomcat old dir
+  set_fact: tomcat_home=tomcat{{common.tomcat_rename_version}}
+  when:  (p_old_tomcat.stat.isdir is defined and p_old_tomcat.stat.isdir)
+  tags:
+    - apigateway_backup    
+ 
+# set the tomcat version    
+- name: set tomcat new dir
+  set_fact: tomcat_home=tomcat
+  when:  (p_new_tomcat.stat.isdir is defined and p_new_tomcat.stat.isdir)
+  tags:
+    - apigateway_backup
+    
+- name: set tomcat old dir
+  include: ./backup_shubao.yml
+  when:  ('{{tomcat_home}}' != "is_exist_tomcat")  
+  tags:
+    - apigateway_backup

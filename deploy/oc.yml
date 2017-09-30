@@ -1,0 +1,24 @@
+         
+- hosts: asgard
+  serial: 1
+  remote_user: '{{common.user_apigateway}}'
+  roles:
+    - oc_asgard
+    - asgard
+    - health_check
+
+- hosts: silvan
+  serial: 1
+  remote_user: '{{common.user_console}}'
+  roles:
+    - oc_silvan
+    - silvan
+    - health_check
+    
+- hosts: shubao
+  serial: 1
+  remote_user: '{{common.user_apigateway}}'
+  roles:
+    - oc_shubao_go
+    - shubao_go
+    - health_check

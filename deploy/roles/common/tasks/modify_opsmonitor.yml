@@ -1,0 +1,25 @@
+ 
+- stat: path=/home/zabbix/etc/zabbix_agentd.conf.d/apigateway.conf
+  register: zabbix_api_conf
+  sudo: yes   
+  tags:
+    - config_opsmonitor   
+  
+- name: create apigateway.conf file
+  file: path=/home/zabbix/etc/zabbix_agentd.conf.d/apigateway.conf state=touch
+  when: (zabbix_api_conf is defined and zabbix_api_conf.stat.exists == false)  
+  sudo: yes
+  tags:
+    - config_opsmonitor    
+
+- name: update apigateway.conf
+  sudo: yes
+  lineinfile: dest=/home/zabbix/etc/zabbix_agentd.conf.d/apigateway.conf regexp='^UserParameter=apigateway\.service\.health\.check' line='UserParameter=apigateway.service.health.check[*],/bin/bash /opt/tools/service_healthCheck.sh'  
+  tags:
+    - config_opsmonitor  
+  
+- name: update apigateway.conf
+  sudo: yes
+  lineinfile: dest=/home/zabbix/etc/zabbix_agentd.conf.d/apigateway.conf regexp='^UserParameter=apigateway\.service\.lb\.switchover\.check' line='UserParameter=apigateway.service.lb.switchover.check[*],/bin/bash /opt/tools/ha_monitor.sh'  
+  tags:
+    - config_opsmonitor 

@@ -1,0 +1,50 @@
+
+## check var
+
+-  name: check required global vars before install or update
+   fail: msg="Variable '{{ item }}' is not defined"
+   when: ({{ item }} is undefined)
+   with_items: required_vars 
+
+## check pkg exist begin
+- name: check shubao pkg whether exists
+  stat: path={{shubao_go.pkg_dir}}/{{shubao_go.pkg_name}}
+  register: shubao_pkg
+
+- name: assert that shubao pkg exits
+  assert: { that: "shubao_pkg.stat.islnk is defined" }
+
+- name: check asgard whether exists
+  stat: path={{asgard.pkg_dir}}/{{asgard.pkg_name}}
+  register: asgard_pkg
+
+- name: assert that asgard pkg exits
+  assert: { that: "asgard_pkg.stat.islnk is defined" }
+
+- name: check silvan pkg whether exists
+  stat: path={{silvan.pkg_dir}}/{{silvan.pkg_name}}
+  register: silvan_pkg
+
+- name: assert that silvan pkg exits
+  assert: { that: "silvan_pkg.stat.islnk is defined" }
+
+- name: check memcached whether exists
+  stat: path={{memcached.pkg_dir}}/{{memcached.pkg_name}}
+  register: memcached_pkg
+
+- name: assert that memcached pkg exits
+  assert: { that: "memcached_pkg.stat.islnk is defined" }
+
+- name: check zookeeper whether exists
+  stat: path={{zookeeper.pkg_dir}}/{{zookeeper.pkg_name}}
+  register: zookeeper_pkg
+
+- name: assert that zookeeper pkg exits
+  assert: { that: "zookeeper_pkg.stat.islnk is defined" }
+
+- name: check kafka whether exists
+  stat: path={{kafka.pkg_dir}}/{{kafka.pkg_name}}
+  register: kafka_pkg
+
+- name: assert that kafka pkg exits
+  assert: { that: "kafka_pkg.stat.islnk is defined" }

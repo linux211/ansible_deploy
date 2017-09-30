@@ -1,0 +1,168 @@
+---
+# 添加无密码sudo权限 
+- name: add sudo no password permission
+  lineinfile: dest={{common.etc_sudoer_path}} regexp='^{{common.user_console}} ALL=NOPASSWD:ALL' line='{{common.user_console}} ALL=NOPASSWD:ALL'
+  sudo: yes
+  tags:
+    - silvan_uninstall  
+
+# 添加无密码sudo权限   
+- name: add no password to dbadmin
+  lineinfile: dest={{common.etc_sudoer_path}} regexp='^{{common.user_console}} ALL=(dbadmin) NOPASSWD:ALL' line='^{{common.user_console}} ALL=(dbadmin) NOPASSWD:ALL'
+  sudo: yes  
+
+- name: change home mode
+  shell: chmod 755 /opt; chmod 755 {{silvan.untar_dir}}
+  sudo: yes
+  
+- stat: path={{silvan.bin_dir}}
+  register: p
+  tags:
+    - silvan_uninstall  
+
+# 停止silvan服务
+- name: stop
+  shell: sh  stop_silvan.sh
+  when:  p.stat.isdir is defined and p.stat.isdir
+  args:
+    chdir: '{{silvan.bin_dir}}'
+  ignore_errors: true
+  tags:
+    - silvan_uninstall
+
+# 卸载silvan
+- name: uninstall silvan
+  shell: sh  {{silvan.install_dir}}/install/uninstall_silvan.sh
+  when:  p.stat.isdir is defined and p.stat.isdir
+  ignore_errors: true
+  sudo: yes 
+  tags:
+    - silvan_uninstall
+
+- stat: path={{silvan.install_dir}}
+  register: p_install
+  tags:
+    - silvan_uninstall     
+    
+# 删除silvan目录
+- name: remove silvan
+  shell: chmod 750 {{silvan.install_dir}} -R ; rm -r {{silvan.install_dir}}
+  when:  p_install.stat.isdir is defined and p_install.stat.isdir
+  ignore_errors: true
+  sudo: yes 
+  tags:
+    - silvan_uninstall    
+
+- name: create log dir
+  sudo: yes
+  file: path={{common.console_log}} state=directory owner={{ansible_ssh_user}} group={{ansible_ssh_user}} mode=700      
+    
+# 拷贝silvan安装包
+- name: upload silvan package 
+  copy: src={{silvan.pkg_dir}}/{{silvan.pkg_name}} dest={{common.home_dir}} force=yes
+
+# 解压silvan安装包
+- name: untar
+  unarchive: src={{common.home_dir}}/{{silvan.pkg_name}} dest={{silvan.untar_dir}} copy=no
+
+# 安装卸载脚本dos2unix转换
+- name: dos2unix install shell
+  shell: dos2unix {{silvan.make_dir}}/*.sh
+
+# 为安装脚本添加执行权限
+- name: add install shell execute right
+  shell: chmod +x {{silvan.make_dir}}/*.sh
+
+# 启停脚本dos2unix转换
+- name: dos2unix bin
+  shell: 'dos2unix {{silvan.bin_dir}}/*.sh'
+
+# tool脚本dos2unix转换
+- name: dos2unix tool shell
+  shell: dos2unix {{silvan.tool_dir}}/safetool/bin/safetool
+
+# 修改安装配置文件
+- name: config silvan ip
+  lineinfile: dest='{{silvan.make_dir}}/silvan.conf' regexp='^silvan\.rest\.ip=' line='silvan.rest.ip={{ansible_ssh_host}}'
+
+- name: config gaussdb ip
+  lineinfile: dest='{{silvan.make_dir}}/silvan.conf' regexp='^gaussdb\.ip=' line='gaussdb.ip={{gaussdb_float_ip}}' ##后续配置主备浮动IP
+
+- name: config initial database
+  lineinfile: dest='{{silvan.make_dir}}/silvan.conf' regexp='^silvan\.initial\.database=' line='silvan.initial.database={{initial_database}}' ##是否初始化数据库
+  
+- name: config initial table
+  lineinfile: dest='{{silvan.make_dir}}/silvan.conf' regexp='^silvan\.table\.init=' line='silvan.table.init={{initial_table}}' ##是否初始化table 
+  
+- name: config initial table
+  lineinfile: dest='{{silvan.make_dir}}/silvan.conf' regexp='^silvan\.table\.sqlpackage\.name=' line='silvan.table.sqlpackage.name={{silvan.sqlpackage_name}}' ##更新表的脚本路径   
+  
+- name: config iam ip
+  lineinfile: dest='{{silvan.make_dir}}/silvan.conf' regexp='^iam\.server\.ip=' line='iam.server.ip={{common_iam.ip}}'
+
+- name: config iam port
+  lineinfile: dest='{{silvan.make_dir}}/silvan.conf' regexp='^iam\.server\.port=' line='iam.server.port={{common_iam.port}}'
+
+- name: config iam role name
+  lineinfile: dest='{{silvan.make_dir}}/silvan.conf' regexp='^iam\.token\.admin\.role\.name=' line='iam.token.admin.role.name=op_service'
+
+  # 安装silvan
+- name: install
+  ignore_errors: true
+  shell: '{{silvan.make_dir}}/install_silvan.sh'
+  sudo: yes 
+  
+  # 修改silvan配置文件
+- name: config
+  template: src=application.properties dest={{silvan.certificate_dir}}
+
+  # 上传证书
+- name: upload certificate
+  copy: src=silvan_server.jks dest={{silvan.certificate_dir}}
+
+  # 修改证书配置
+- name: update server rest ssl certpass
+  lineinfile: dest='{{silvan.certificate_dir}}/rest.properties' regexp='^server\.rest\.ssl\.certpass=' line='server.rest.ssl.certpass=xJJ0HGn9fluqIct/Y1PaTZQE4qXRPm1HK5/aHcaACe0='
+
+- name: update server rest ssl certpass salt
+  lineinfile: dest='{{silvan.certificate_dir}}/rest.properties' regexp='^server\.rest\.ssl\.certpass\.salt=' line='server.rest.ssl.certpass.salt=B0489A259407FF6C176DB438B85387E4'
+
+- name: update server rest ssl keystorepass
+  lineinfile: dest='{{silvan.certificate_dir}}/rest.properties' regexp='^server\.rest\.ssl\.keystorepass=' line='server.rest.ssl.keystorepass=xJJ0HGn9fluqIct/Y1PaTZQE4qXRPm1HK5/aHcaACe0='
+
+- name: update server rest ssl keystorepass salt
+  lineinfile: dest='{{silvan.certificate_dir}}/rest.properties' regexp='^server\.rest\.ssl\.keystorepass\.salt=' line='server.rest.ssl.keystorepass.salt=B0489A259407FF6C176DB438B85387E4'
+
+  # 为启停脚本添加运行权限
+- name: add bin execute right
+  shell: chmod u+x {{silvan.bin_dir}}/*.sh
+
+  # 启动服务前source环境变量
+- name: source before start
+  ignore_errors: true
+  shell: source {{common.etc_profile_path}}
+
+- name: rm silvan package
+  shell: rm -rf /opt/{{common.user_console}}/{{silvan.pkg_name}}
+
+- name: delete sudo NOPASSWORD 
+  shell: sed -i "/{{common.user_console}} ALL=NOPASSWD:ALL/d" {{common.etc_sudoer_path}}
+  sudo: yes
+  tags:
+    - silvan_uninstall   
+  
+- name: delete sudo NOPASSWORD to dbadmin
+  shell: sed -i "/{{common.user_console}} ALL=(dbadmin) NOPASSWD:ALL/d" {{common.etc_sudoer_path}}
+  sudo: yes 
+
+- name: change log  mode
+  shell: chown onframework:onframework /var/log/console -R
+  sudo: yes
+
+  # 启动silvan服务
+- name: restart silvan services
+  shell: sh silvan_monitor.sh restart
+  args:
+    chdir: '{{silvan.bin_dir}}'
+  tags:
+    - silvan_restart

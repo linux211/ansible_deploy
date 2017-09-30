@@ -1,0 +1,20 @@
+
+
+- name: print msg
+  debug: msg="Backup the tomcat dir {{tomcat_home}}"
+ 
+- name: change permissom 
+  shell: chown  apigateway:apigateway shubao -R; chown apigateway:apigateway {{tomcat_home}} -R 
+  args:
+    chdir: '/opt/{{common.user_apigateway}}'
+  sudo: yes
+  tags: 
+   - apigateway_backup
+ 
+- name: backup shubao
+  shell: tar zcpf {{shubao_go.backup_name}} shubao/  {{tomcat_home}} --exclude={{tomcat_home}}/logs/*
+  args:
+    chdir: '/opt/{{common.user_apigateway}}'
+  tags: 
+   - apigateway_backup
+ 

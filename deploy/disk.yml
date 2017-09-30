@@ -1,0 +1,48 @@
+---
+- hosts: memcached
+  remote_user: '{{common.user_console}}'
+  serial: 1
+  roles:
+    - initsystem
+  tags:
+    - mount_disk
+
+- hosts: kafka
+  remote_user: '{{common.user_apigateway}}'
+  serial: 1
+  roles:
+    - initsystem
+  tags:
+    - mount_disk
+    
+- hosts: asgard
+  remote_user: '{{common.user_apigateway}}'
+  serial: 1
+  roles:
+    - initsystem
+  tags:
+    - mount_disk
+
+- hosts: shubao
+  remote_user: '{{common.user_apigateway}}'
+  serial: 1
+  roles:
+    - initsystem
+  tags:
+    - mount_disk
+ 
+- hosts: silvan
+  remote_user: '{{common.user_console}}'
+  serial: 1
+  roles:
+    - initsystem
+  tags:
+    - mount_disk  
+
+- hosts: nginx
+  remote_user: '{{common.user_console}}'
+  serial: 1
+  roles:
+    - initsystem
+  tags:
+    - mount_disk   

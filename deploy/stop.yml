@@ -1,0 +1,26 @@
+- hosts: memcached
+  remote_user: '{{common.user_console}}'
+  roles:
+    - memcached
+    
+- hosts: asgard
+  remote_user: '{{common.user_apigateway}}'
+  roles:
+    - asgard
+ 
+- hosts: shubao
+  remote_user: '{{common.user_apigateway}}'
+  roles:
+    - shubao_go
+    
+- hosts: nginx
+  remote_user: '{{common.user_console}}'
+  roles:
+    - ha_stop
+    
+- hosts: kafka
+  remote_user: '{{common.user_apigateway}}'
+  roles:
+    - kafka    
+    - zookeeper
+    

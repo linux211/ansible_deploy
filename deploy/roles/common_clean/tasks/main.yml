@@ -1,0 +1,56 @@
+---
+- name: rm bash_history
+  shell: rm -rf ~/.bash_history
+  tags:
+    - common_clean
+    
+- name: history -c
+  shell: history -c
+  tags:
+    - common_clean  
+    
+- name: remove the asgard version backup package 
+  file: path=/opt/{{ansible_ssh_user}}/{{item}}_asgard_backup.tar.gz  state=absent
+  ignore_errors: true
+  with_items: '{{recent_versions}}'
+  sudo: yes
+  tags:
+    - common_clean
+    
+- name: remove the shubao version backup package 
+  file: path=/opt/{{ansible_ssh_user}}/{{item}}_shubao_backup.tar.gz  state=absent
+  ignore_errors: true
+  with_items: '{{recent_versions}}'
+  sudo: yes
+  tags:
+    - common_clean  
+
+- name: remove the silvan version backup package 
+  file: path=/opt/{{ansible_ssh_user}}/{{item}}_silvan_backup.tar.gz  state=absent
+  ignore_errors: true
+  with_items: '{{recent_versions}}'
+  sudo: yes
+  tags:
+    - common_clean
+
+- name: remove the nginx version backup package 
+  file: path=/opt/{{ansible_ssh_user}}/{{item}}_nginx_backup.tar.gz  state=absent
+  ignore_errors: true
+  with_items: '{{recent_versions}}'
+  sudo: yes
+  tags:
+    - common_clean     
+    
+- name: delete onframework sudo NOPASSWORD 
+  shell: sed -i "/{{common.user_console}} ALL=NOPASSWD:ALL/d" {{common.etc_sudoer_path}}
+  sudo: yes
+  tags:
+    - common_clean  
+  
+- name: delete apigateway sudo NOPASSWORD 
+  shell: sed -i "/{{common.user_apigateway}} ALL=NOPASSWD:ALL/d" {{common.etc_sudoer_path}}
+  sudo: yes    
+  tags:
+    - common_clean
+  
+  

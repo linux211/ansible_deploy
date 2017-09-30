@@ -1,0 +1,17 @@
+
+- name: change package permit
+  shell: chown apigateway:apigateway shubao -R
+  args:
+    chdir: 
+        '/opt/{{common.user_apigateway}}'  
+  sudo: yes
+  tags:
+    - shubao_go_backup    
+    
+- name: backup shubao_go 
+  shell: tar zcpf {{shubao_go.backup_name}} shubao
+  args:
+    chdir: 
+        '/opt/{{common.user_apigateway}}'
+  tags:
+    - shubao_go_backup

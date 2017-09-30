@@ -1,0 +1,74 @@
+---
+- stat: path={{etl.path}}
+  register: p_home
+  tags:
+    - etl_uninstall
+    - stop_etl
+    
+- name: stop etl crontab
+  shell: service cron stop
+  when:  p_home.stat.isdir is defined and p_home.stat.isdir
+  sudo: yes 
+  tags:
+    - etl_uninstall
+    - stop_etl
+
+- name: stop
+  shell: sh {{etl.path}}/bin/etl_monitor.sh stop
+  when:  p_home.stat.isdir is defined and p_home.stat.isdir
+  ignore_errors: true
+  tags:
+    - etl_uninstall
+    - stop_etl
+
+- name: uninstall
+  shell: rm -rf /opt/apigateway/etl
+  when:  p_home.stat.isdir is defined and p_home.stat.isdir
+  ignore_errors: true
+  sudo: yes
+  tags:
+    - etl_uninstall
+
+- name: create log dir
+  sudo: yes
+  file: path={{common.apigateway_log}} state=directory owner={{ansible_ssh_user}} group={{ansible_ssh_user}}
+
+- name: upload etl package
+  copy: src={{etl.pkg_dir}}/{{etl.pkg_name}} dest={{etl.home}} force=yes
+
+- name: untar etl package
+  unarchive: src={{etl.home}}/{{etl.pkg_name}} dest={{etl.home}} copy=no
+  
+- name: config shubao_app.json
+  template: src=shubao_app.json dest={{etl.path}}/conf
+  
+- name: config cassandra_config.json
+  template: src=cassandra_config.json dest={{etl.path}}/conf 
+
+- name: config ces_reporter_config.json
+  template: src=ces_reporter_config.json dest={{etl.path}}/conf
+
+- name: config kafka.json
+  template: src=kafka.json dest={{etl.path}}/conf
+  
+- name: config oc key
+  template: src=oc-key dest={{etl.path}}/conf 
+  
+- name: config crontab
+  sudo: yes
+  lineinfile: dest=/etc/crontab regexp='^\*/1 \* \* \* \* {{common.user_apigateway}}  sh /opt/{{common.user_apigateway}}/etl/bin/etl_monitor.sh check' line='*/1 * * * * {{common.user_apigateway}}  sh /opt/{{common.user_apigateway}}/etl/bin/etl_monitor.sh check'
+
+- name: rm etl package
+  shell: rm -rf {{etl.home}}/{{etl.pkg_name}}
+  tags:
+    - etl_uninstall
+
+- name: restart crontab
+  shell: service cron restart
+  sudo: yes
+  
+- name: restart etl services
+  shell: sh {{etl.path}}/bin/etl_monitor.sh restart
+  ignore_errors: true
+  tags:
+    - etl_restart

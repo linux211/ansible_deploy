@@ -1,0 +1,16 @@
+
+
+- name: set default
+  set_fact: username=apigateway
+
+- name: set to 'onframework'
+  set_fact: username=onframework
+  when:  "'{{component|default()}}'=='nginx' or '{{component|default()}}'=='silvan' or '{{component|default()}}'=='memcached'"
+
+- name: Check whether there's your user on the machine
+  shell: /usr/bin/getent passwd {{username}} | /usr/bin/wc -l | tr -d ''
+  register: user_exist
+  
+- name: init system user
+  include: init_sysuser.yml username={{username}}
+  when: ( is_check_installed is not defined or "{{user_exist.stdout}}" == "0" )

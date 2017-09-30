@@ -1,0 +1,18 @@
+
+- hosts: common_onframework
+  remote_user: '{{common.root_user}}'
+  gather_facts: False
+  roles:
+    - initsystem
+    - initsysuser
+  tags:
+    - initenv
+    
+- hosts: common_apigateway
+  remote_user: '{{common.root_user}}'
+  gather_facts: False
+  roles:
+    - initsystem
+    - initsysuser
+  tags:
+    - initenv    

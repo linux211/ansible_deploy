@@ -1,0 +1,28 @@
+ 
+- name: check shell dir exist.
+  stat: path={{tmp_dir}}
+  register: tmpdir
+ 
+# clean the tmp dir
+- name: clean the tmp
+  shell: rm -rf /tmp/*
+  ignore_errors: true  
+  sudo: yes
+    
+- name: If shell dir exist, rm it.
+  file: path={{tmp_dir}} state=absent force=true
+  when: tmpdir.stat.isdir is defined and tmpdir.stat.isdir
+
+- name: create shell dir
+  file: path={{tmp_dir}} state=directory mode=0700 recurse=true
+  tags:
+    - health_check  
+    
+- name: transfer  
+  template: src=config_shubao_oc.sh dest={{tmp_dir}}/config_shubao_oc.sh mode=0500 
+ 
+- name: config oc  
+  shell: sh {{tmp_dir}}/config_shubao_oc.sh
+      
+- name: config oc key
+  template: src=oc-key dest={{shubao_go.script_home}}/conf

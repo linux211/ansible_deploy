@@ -1,0 +1,28 @@
+---
+- stat: path=/opt/{{common.user_console}}/{{nginx.backup_name}}
+  register: p_nginx_pk
+
+- name: backup nginx
+  shell: tar zcvf {{nginx.backup_name}} nginx/ --ignore-failed-read --warning=no-file-changed --exclude=nginx/logs/*
+  when: p_nginx_pk is defined and p_nginx_pk.stat.exists == false
+  args:
+    chdir: '{{common.home_dir}}'
+  sudo: yes 
+  ignore_errors: true  
+  tags: 
+   - nginx_backup
+   
+- name: fetch the modify date
+  shell: stat {{nginx.backup_name}}|awk -F'[ .]' '/Modify/{print $2" "$3}'
+  args:
+    chdir: 
+        '{{common.home_dir}}'
+  register: p_date 
+    
+- name: print success msg
+  debug: msg="Backup nginx succ. the file create time is {{p_date.stdout}}"
+  when: (p_nginx_pk is defined and p_nginx_pk.stat.exists) == false
+  
+- name: print the result msg
+  debug: msg="The nginx backup package is already exist, the file create time is {{p_date.stdout}}"
+  when: p_nginx_pk is defined and p_nginx_pk.stat.exists 

@@ -1,0 +1,121 @@
+<?xml version='1.0' encoding='utf-8'?>
+<Server port="-1" shutdown="Rea!!yC0mplexW0rd">
+  <!-- SecAs: TOMCAT_CONF 2.2.6  -->
+  <Listener className="org.apache.catalina.startup.VersionLoggerListener" />
+  <!-- SecAs: SEC-APP-WebApp-100: need Security Listener -->
+  <Listener className="org.apache.catalina.security.SecurityListener" checkedOsUsers="root" minimumUmask="0007"/>
+  <!--APR library loader. Documentation at /docs/apr.html -->
+  <Listener className="org.apache.catalina.core.AprLifecycleListener" SSLEngine="on" />
+  <!--Initialize Jasper prior to webapps are loaded. Documentation at /docs/jasper-howto.html -->
+  <Listener className="org.apache.catalina.core.JasperListener" />
+  <!-- Prevent memory leaks due to use of particular java/javax APIs-->
+  <Listener className="org.apache.catalina.core.JreMemoryLeakPreventionListener" />
+  <Listener className="org.apache.catalina.mbeans.GlobalResourcesLifecycleListener" />
+  <Listener className="org.apache.catalina.core.ThreadLocalLeakPreventionListener" />
+
+  <!-- Global JNDI resources
+       Documentation at /docs/jndi-resources-howto.html
+  -->
+  <GlobalNamingResources>
+    <!-- Editable user database that can also be used by
+         UserDatabaseRealm to authenticate users
+    -->
+    <Resource name="UserDatabase" auth="Container"
+              type="org.apache.catalina.UserDatabase"
+              description="User database that can be updated and saved"
+              factory="org.apache.catalina.users.MemoryUserDatabaseFactory"
+              pathname="conf/tomcat-users.xml" />
+  </GlobalNamingResources>
+  
+  <Service name="Catalina">
+    <!-- SecAs: TOMCAT_CONF 2.2.7 PostSize and  HeaderSize-->
+    <!-- SecAs: TOMCAT_CONF 2.2.8 connectionTimeout should not be 0 or -1 -->
+    <!-- SecAs: TOMCAT_CONF 2.2.15 no X-Powered-By. server=.. -->
+    <!-- SecAs: Web_SPEC 6.6 Encoding -->
+    <!--
+    <Connector port="7080" protocol="HTTP/1.1"
+               redirectPort="7443"
+               maxPostSize="10240"
+               maxHttpHeaderSize="8192"
+               connectionTimeout="20000"
+               xpoweredBy="false"
+               server="SecAs"
+               URIEncoding="UTF-8"
+    />-->
+    <!--Connector executor="tomcatThreadPool"
+               port="8080" protocol="HTTP/1.1"
+               redirectPort="8443"
+               maxPostSize="10240"
+               maxHttpHeaderSize="8192"
+               connectionTimeout="20000"
+               xpoweredBy="false"
+               server="SecAs"
+               URIEncoding="UTF-8"
+    /-->
+    
+    <Connector port="7443" protocol="com.huawei.wcc.secas.Http11Protocol" address="{{ansible_ssh_host}}"
+               maxThreads="750"
+               acceptCount="500" 
+               minSpareThreads="25" 
+               maxPostSize="10240"
+               maxHttpHeaderSize="16384"
+               connectionTimeout="20000"
+               xpoweredBy="false"
+               server="SecAs"
+               URIEncoding="UTF-8"
+               SSLEnabled="true" scheme="https" secure="true" clientAuth="false"
+               sslProtocol="TLS"
+               sslEnabledProtocols="TLSv1.1,TLSv1.2" 
+               ciphers="SSL_ECDHE_RSA_WITH_AES_128_CBC_SHA256,SSL_ECDHE_RSA_WITH_AES_128_CBC_SHA,TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256, TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA"
+               keystoreFile="./conf/keystore/server.keystore"
+               keystorePass="d2NjX2NyeXB0ATQxNDU1MzVGNDM0MjQzOzM2MzczMDM5NDE0MjMwMzY0NTM3NDI0NDM0NDE0NjM0MzYzNzQ0Mzk0NjQyNDM0NTMwNDM0MjMyMzEzMTMxMzAzMzQ2MzkzNzQzMzk0MTMzMzQzNTQ1NDM0NjM5NDQzNjQ2MzE0NjMzMzY0NTM5MzM0MzM4MzgzMjM4MzMzNzQ1OzszMTMwMzAzMDMwOzA3MTcxNUE5RTg3RTA2RUE4MDQ1NDEzQkM0Q0I4RTcyO0Y0MjI2MkFGRUU5RUYwQkQ7"
+     />
+
+    <!-- SecAs: TOMCAT_CONF 2.2.13 Disable AJP if no need, otherwise the default port 8009 should be changed -->
+    <!-- SecAs: AJP  Connector NO server attr-->
+    <!--Connector port="8101" protocol="AJP/1.3" redirectPort="8443"
+                maxPostSize="10240"
+                maxHttpHeaderSize="8192"
+                connectionTimeout="20000"
+                xpoweredBy="false"
+                URIEncoding="UTF-8"
+    /-->
+
+    <Engine name="Catalina" defaultHost="localhost">
+
+      <!-- SecAs: HWCLOUDS: Disable range request(403) -->
+      <Valve className="com.huawei.wcc.secas.RequestHeaderNameValve" deny="^range|.*;range;.*"/>
+      <!-- Use the LockOutRealm to prevent attempts to guess user passwords
+           via a brute-force attack -->
+      <Realm className="org.apache.catalina.realm.LockOutRealm">
+        <!-- This Realm uses the UserDatabase configured in the global JNDI
+             resources under the key "UserDatabase".  Any edits
+             that are performed against this UserDatabase are immediately
+             available for use by the Realm.  -->
+        <Realm className="org.apache.catalina.realm.UserDatabaseRealm"
+               resourceName="UserDatabase"/>
+      </Realm>
+      
+      <!-- SecAs: TOMCAT_CONF 2.1.5 disable autoDeploy -->
+      <!-- SecAs: TOMCAT_CONF 2.2.4 customize error-page -->
+      <Host name="localhost" appBase="webapps"
+            unpackWARs="true" autoDeploy="false" deployOnStartup="false"
+            errorReportValveClass="com.huawei.wcc.secas.SafeErrorReportValve">
+
+        <!-- SingleSignOn valve, share authentication between web applications
+             Documentation at: /docs/config/valve.html -->
+        <!--Valve className="org.apache.catalina.authenticator.SingleSignOn" /-->
+
+        <!-- SecAs: TOMCAT_CONF 2.2.19 Do not resolve host in log valve(resolveHosts is false by default )-->
+        <!-- SecAs: TOMCAT_CONF 2.5.1 Enable Log-->
+        <Valve className="com.huawei.wcc.secas.Log4JAccessLogValve"
+               pattern="%a %{X-Real-IP}i %{X-Forwarded-For}i %l %u %t &quot;%r&quot; %s %b %D" />
+        <!--SecAs: This is an example. It MUST be deleted before releasing -->
+        <!--SecAs: TOMCAT_CONF 2.2.12/WEB_SPEC 5.2: cookie httponly. useHttpOnly default is true -->
+        <Context path="/" docBase="{{tomcat.new_secas_dir}}/webapps/apigateway" reloadable="false" crossContext="false" allowLinking="false" useHttpOnly="true"/>
+      </Host>
+      
+      <!-- SecAs: TOMCAT_CONF 2.2.3:  disable Symbolic links(disabled by default)-->
+    </Engine>
+  </Service>
+</Server>

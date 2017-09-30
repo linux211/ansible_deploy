@@ -1,0 +1,46 @@
+---
+- stat: path={{elk.path}}/config
+  register: elk_config_p
+     
+- fail: msg="Failure the elk is not installed"
+  when: elk_config_p.stat.isdir is not defined
+    
+- name: upload elk_input.conf file
+  sudo: yes
+  template: src=elk_input.conf dest={{elk.path}}/config/elk_input.conf owner=root group=root mode=640
+
+- name: upload elk_input.conf file
+  sudo: yes
+  template: src=elk_input.conf dest={{elk.path}}/config/elk_input.conf owner=root group=root mode=640
+
+- name: upload fix script
+  sudo: yes
+  copy: src=configELKAgent.sh dest={{elk.path}}/config/ mode=0644 owner=root group=root
+
+- name: config path
+  sudo: yes
+  lineinfile: dest={{elk.path}}/config/configELKAgent.sh regexp="^CONFIG_PATH=" line='CONFIG_PATH={{elk.path}}/config/'
+
+- name: config bin path
+  sudo: yes
+  lineinfile: dest={{elk.path}}/config/configELKAgent.sh regexp="^BIN_PATH=" line='BIN_PATH={{elk.path}}/bin/'
+
+- name: dos2unix configELKAgent script
+  sudo: yes
+  shell: dos2unix {{elk.path}}/config/configELKAgent.sh
+
+- name: check and fix the config logstash-shipper.conf
+  sudo: yes
+  shell: sh {{elk.path}}/config/configELKAgent.sh
+  register: result
+
+- debug: var=result.stdout
+
+- name: clean config
+  sudo: yes
+  shell: rm -f {{elk.path}}/config/elk_input.conf
+  ignore_errors: true
+
+- name: clean script
+  sudo: yes
+  shell: rm -f {{elk.path}}/config/configELKAgent.sh

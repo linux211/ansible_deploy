@@ -1,0 +1,20 @@
+---
+
+- name: get os type
+  shell: egrep -o 'EulerOS|SUSE' /proc/version
+  sudo: yes 
+  register: os_type  
+
+- name: upload script to get the info
+  template: src=config_network.sh dest=/tmp/
+  when:  ("{{os_type.stdout}}" == "EulerOS")
+
+- name:  config network 
+  shell: sh /tmp/config_network.sh
+  sudo: yes
+  when:  ("{{os_type.stdout}}" == "EulerOS")  
+  
+- name: remove config script 
+  file: path=/tmp/config_network.sh  state=absent  force=yes
+  sudo: yes  
+  when:  ("{{os_type.stdout}}" == "EulerOS")  

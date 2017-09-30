@@ -1,0 +1,11 @@
+#all vars need to check before install or update
+
+---
+required_vars:
+  - g_iam.region_api.address
+  - g_iam.region_api.address.split(":")[0]
+  - g_iam.region_api.address.split(":")[1]
+  - g_regions[0].id
+  - g_regions[0].name
+  - g_oc.region_api_ip
+  - g_oc.server_port

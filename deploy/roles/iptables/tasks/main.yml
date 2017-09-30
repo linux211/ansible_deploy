@@ -1,0 +1,52 @@
+---
+- name: add sudo no password permission
+  lineinfile: dest={{common.etc_sudoer_path}} regexp='^{{common.user_apigateway}} ALL=NOPASSWD:ALL' line='{{common.user_apigateway}} ALL=NOPASSWD:ALL'
+  when: "'{{component}}' == 'kafka-security'"
+  sudo: yes 
+
+- name: upload iptables_kafka.sh
+  when: "'{{component}}' == 'kafka-security'"
+  template: src=iptables_kafka.sh dest=/tmp/ mode='u+x,g+x,o+x' force=yes
+  
+- name: kafka iptables
+  shell: sh iptables_kafka.sh
+  when: "'{{component}}' == 'kafka-security'"
+  args:
+    chdir: '/tmp/'
+  tags: kafka-security  
+  
+- name: iptables_kafka.sh
+  when: "'{{component}}' == 'kafka-security'"
+  file: path=/tmp/iptables_kafka.sh  state=absent  
+  
+- name: add sudo no password permission
+  when: "'{{component}}' == 'memcached-security'"
+  lineinfile: dest={{common.etc_sudoer_path}} regexp='^{{common.user_console}} ALL=NOPASSWD:ALL' line='{{common.user_console}} ALL=NOPASSWD:ALL'
+  sudo: yes 
+  
+- name: upload iptables_memcached.sh
+  when: "'{{component}}' == 'memcached-security'"
+  template: src=iptables_memcached.sh dest=/tmp/ mode='u+x,g+x,o+x' force=yes
+  tags: memcached-security
+  
+- name: memcached iptables fix
+  shell: sh iptables_memcached.sh
+  when: "'{{component}}' == 'memcached-security'"
+  args:
+    chdir: '/tmp/'
+  tags: memcached-security
+
+- name: remove iptables_memcached.sh
+  when: "'{{component}}' == 'memcached-security'"
+  file: path=/tmp/iptables_memcached.sh  state=absent
+  tags: memcached-security
+  
+- name: delete sudo NOPASSWORD 
+  shell: sed -i "/{{common.user_apigateway}} ALL=NOPASSWD:ALL/d" {{common.etc_sudoer_path}}
+  when: "'{{component}}' == 'kafka-security'"
+  sudo: yes  
+
+- name: delete sudo NOPASSWORD 
+  when: "'{{component}}' == 'memcached-security'"
+  shell: sed -i "/{{common.user_console}} ALL=NOPASSWD:ALL/d" {{common.etc_sudoer_path}}
+  sudo: yes  

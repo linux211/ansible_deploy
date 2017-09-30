@@ -1,0 +1,27 @@
+
+- stat: path=/opt/{{common.user_apigateway}}/{{asgard.backup_name}}
+  register: p_asgard_pkg
+      
+- name: backup asgard
+  shell: tar zcpf {{asgard.backup_name}} asgard/
+  args:
+    chdir: '/opt/{{common.user_apigateway}}'
+  when: (p_asgard_pkg is defined and p_asgard_pkg.stat.exists) == false
+  ignore_errors: true  
+  tags: 
+   - asgard_backup
+   
+- name: fetch the modify date
+  shell: stat {{asgard.backup_name}}|awk -F'[ .]' '/Modify/{print $2" "$3}'
+  args:
+    chdir: 
+        '/opt/{{common.user_apigateway}}'  
+  register: p_date 
+    
+- name: print success msg
+  debug: msg="Backup asgard succ. the file create time is {{p_date.stdout}}"
+  when: (p_asgard_pkg is defined and p_asgard_pkg.stat.exists) == false
+  
+- name: print the result msg
+  debug: msg="The asgard backup package is already exist, the file create time is {{p_date.stdout}}"
+  when: p_asgard_pkg is defined and p_asgard_pkg.stat.exists

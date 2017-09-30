@@ -1,0 +1,5 @@
+float_ip: '{{silvan_lb_float_ip}}'
+component: nginx  
+nlbips: '{{silvan.ips}}'
+https_port: '{{silvan.sec_port}}'
+flag_type_pod: N

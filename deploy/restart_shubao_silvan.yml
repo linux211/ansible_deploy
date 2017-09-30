@@ -1,0 +1,12 @@
+- hosts: silvan
+  remote_user: '{{common.user_console}}'
+  gather_facts: False
+  roles:
+    - silvan
+ 
+- hosts: shubao
+  remote_user: '{{common.user_apigateway}}'
+  gather_facts: False  
+  serial: 2
+  roles:
+    - shubao_go

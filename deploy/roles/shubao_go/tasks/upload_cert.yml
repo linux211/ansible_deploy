@@ -1,0 +1,14 @@
+
+- name:  get the list of cert config
+  local_action: "shell ls -l roles/shubao_go/files|grep ^-|awk {'print $9'}"
+  register:  template_cert_file 
+
+- name: make ssl file 
+  file: path={{apigateway.script_home}}/conf/ssl/kms force=true state=directory
+  when: template_cert_file.stdout != ""
+
+- name: upload config file to region
+  copy: src=roles/shubao_go/files/{{item}} dest={{apigateway.script_home}}/conf/ssl/kms/{{item}}
+  when: template_cert_file.stdout != ""  
+  with_items:
+  - "{{template_cert_file.stdout.splitlines()}}" 

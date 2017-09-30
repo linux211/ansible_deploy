@@ -1,0 +1,413 @@
+
+-
+  name:
+    "en_US": "Upgrade"
+    "zh_CN": "升级"
+  description:
+    "en_US": "Upgrade ApiGateway Service"
+    "zh_CN": "升级API网关服务"
+  commands:
+    - "sh upgrade.sh"
+    
+-
+  name:
+    "en_US": "Deploy"
+    "zh_CN": "安装"
+  description:
+    "en_US": "Install ApiGateway Service"
+    "zh_CN": "安装API网关服务"
+  commands:
+    - "sh install.sh"
+    
+-
+  name:
+    "en_US": "Backup"
+    "zh_CN": "备份"
+  description:
+    "en_US": "Backup ApiGateway Service"
+    "zh_CN": "备份API网关服务"
+  commands:
+    - "sh backup.sh"    
+
+-
+  name:
+    "en_US": "Rollback"
+    "zh_CN": "回退"
+  description:
+    "en_US": "Rollback ApiGateway Service"
+    "zh_CN": "回退API网关服务"
+  commands:
+    - "sh rollback.sh"
+ 
+-
+  name:
+    "en_US": "Uninstall"
+    "zh_CN": "卸载"
+  description:
+    "en_US": "Uninstall ApiGateway Service"
+    "zh_CN": "卸载API网关服务"
+  commands:
+    - "sh uninstall.sh"
+    
+-
+  name:
+    "en_US": "Restart shubao and silvan Service"
+    "zh_CN": "重启shubao和silvan服务"
+  description:
+    "en_US": "Restart shubao and silvan"
+    "zh_CN": "重启shubao和silvan服务"
+  commands:
+    - "sh restart_shubao_silvan.sh"  
+    
+-
+  name:
+    "en_US": "Stop the standby Service"
+    "zh_CN": "停止备节点服务"
+  description:
+    "en_US": "Stop the standby Service"
+    "zh_CN": "停止备节点服务"
+  commands:
+    - "sh stop.sh"   
+
+-
+  name:
+    "en_US": "Init standby node environment"
+    "zh_CN": "初始化备节点"
+  description:
+    "en_US": "Init standby node environment"
+    "zh_CN": "初始化备节点"
+  commands:
+    - "sh init_all_env.sh"     
+
+-
+  name:
+    "en_US": "Repair Service"
+    "zh_CN": "修复服务"
+  description:
+    "en_US": "Repair Service"
+    "zh_CN": "修复服务"
+  commands:
+    - "sh condition_install.sh"    
+    
+-
+  name:
+    "en_US": "Upgrade JDK"
+    "zh_CN": "升级JDK"
+  description:
+    "en_US": "Upgrade JDK"
+    "zh_CN": "升级JDK"
+  commands:
+    - "sh upgrade_jdk.sh"
+    
+-
+  name:
+     "en_US": "Health Check"
+     "zh_CN": "健康检查"
+  description:
+     "en_US": "Check the health status of each node of the service"
+     "zh_CN": "检查服务各节点的健康状态"
+  commands:
+     - "sh install_components.sh health_check"
+     
+-
+  name:
+    "en_US": "Check The Basic Environment"
+    "zh_CN": "基础环境检查"
+  description:
+    "en_US": "Check The Basic Environment"
+    "zh_CN": "基础环境检查"
+  commands:
+     - "sh install_components.sh base_check"
+     
+-
+  name:
+    "en_US": "Mount or Fix Disk"
+    "zh_CN": "挂载(修复)磁盘"
+  description:
+    "en_US": "Mount or Fix Disk"
+    "zh_CN": "挂载(修复)磁盘"
+  commands:
+     - "sh repair_disk_mount.sh"
+-
+  name:
+    "en_US": "Install JDK"
+    "zh_CN": "安装JDK"
+  description:
+    "en_US": "Install JDK"
+    "zh_CN": "安装JDK"
+  commands:
+    - "sh install_components.sh jdk"
+
+-
+  name:
+    "en_US": "Init Environment"
+    "zh_CN": "初始化环境"
+  description:
+    "en_US": "Init Environment"
+    "zh_CN": "初始化环境"
+  commands:
+    - "sh install_components.sh initsystem"
+    - "sh install_components.sh initsysuser"
+-
+  name:
+    "en_US": "Init User"
+    "zh_CN": "初始化用户"
+  description:
+    "en_US": "Install User"
+    "zh_CN": "初始化用户"
+  commands:
+    - "sh install_components.sh initsysuser"
+
+-
+  name:
+    "en_US": "Config OC"
+    "zh_CN": "配置OC信息"
+  description:
+    "en_US": "Config OC"
+    "zh_CN": "配置OC信息"
+  commands:
+    - "sh oc.sh"
+    
+-
+  name:
+    "en_US": "Config DB Backup"
+    "zh_CN": "配置数据库备份"
+  description:
+    "en_US": "Config DB Backup"
+    "zh_CN": "配置数据库备份"
+  commands:
+    - "sh config_db_backup.sh"     
+    
+-
+  name:
+    "en_US": "Cancle root login"
+    "zh_CN": "取消root登录限制"
+  description:
+    "en_US": "Cancle root login"
+    "zh_CN": "取消root登录限制"
+  commands:
+    - "sh install_components.sh cancel_root"
+    
+-
+  name:
+    "en_US": "Config common"
+    "zh_CN": "配置公共项"
+  description:
+    "en_US": "Config common"
+    "zh_CN": "配置公共项"
+  commands:
+    - "sh install_components.sh common"
+    
+-
+  name:
+    "en_US": "Init asgard"
+    "zh_CN": "初始化asgard节点"
+  description:
+    "en_US": "Init asgard"
+    "zh_CN": "初始化asgard节点"
+  commands:
+    - "sh init_env.sh asgard"    
+
+-
+  name:
+    "en_US": "Install asgard"
+    "zh_CN": "安装asgard组件"
+  description:
+    "en_US": "Install asgard"
+    "zh_CN": "安装asgard组件"
+  commands:
+    - "sh install_components.sh asgard"
+    
+-
+  name:
+    "en_US": "Init memcached"
+    "zh_CN": "初始化memcached节点"
+  description:
+    "en_US": "Init memcached"
+    "zh_CN": "初始化memcached节点"
+  commands:
+    - "sh init_env.sh memcached"      
+    
+-
+  name:
+    "en_US": "Install memcached"
+    "zh_CN": "安装memcached组件"
+  description:
+    "en_US": "Install memcached"
+    "zh_CN": "安装memcached组件"
+  commands:
+    - "sh install_components.sh memcached"
+    
+-
+  name:
+    "en_US": "Init zk_kfk"
+    "zh_CN": "初始化zk_kfk节点"
+  description:
+    "en_US": "Init ZK_KFK"
+    "zh_CN": "初始化zk_kfk节点"
+  commands:
+    - "sh init_env.sh kafka" 
+
+-
+  name:
+    "en_US": "Install zk_kfk"
+    "zh_CN": "安装zk_kfk组件"
+  description:
+    "en_US": "Install zk_kfk"
+    "zh_CN": "安装zk_kfk组件"
+  commands:
+    - "sh install_components.sh get_zk_ip_addr"
+    - "sh install_components.sh zk_kfk"
+    
+-
+  name:
+    "en_US": "Init Cassandra"
+    "zh_CN": "初始化Cassandra节点"
+  description:
+    "en_US": "Init Cassandra"
+    "zh_CN": "初始化Cassandra节点"
+  commands:
+    - "sh init_env.sh cassandra" 
+
+-
+  name:
+    "en_US": "Install Cassandra"
+    "zh_CN": "安装Cassandra组件"
+  description:
+    "en_US": "Install Cassandra"
+    "zh_CN": "安装Cassandra组件"
+  commands:
+    - "sh install_components.sh cassandra"    
+    
+-
+  name:
+    "en_US": "Init shubao"
+    "zh_CN": "初始化shubao节点"
+  description:
+    "en_US": "Init shubao"
+    "zh_CN": "初始化shubao节点"
+  commands:
+    - "sh init_env.sh shubao"      
+
+-
+   name:
+     "en_US": "Install shubao"
+     "zh_CN": "安装shubao组件"
+   description:
+     "en_US": "Install shubao"
+     "zh_CN": "安装shubao组件"
+   commands:
+     - "sh install_components.sh shubao"  
+
+-
+  name:
+    "en_US": "Init silvan"
+    "zh_CN": "初始化silvan节点"
+  description:
+    "en_US": "Init silvan"
+    "zh_CN": "初始化silvan节点"
+  commands:
+    - "sh init_env.sh silvan"     
+
+-
+  name:
+    "en_US": "Install silvan"
+    "zh_CN": "安装silvan组件"
+  description:
+    "en_US": "Install silvan"
+    "zh_CN": "安装silvan组件"
+  commands:
+    - "sh install_components.sh silvan"
+    
+-
+  name:
+    "en_US": "Init nginx"
+    "zh_CN": "初始化nginx节点"
+  description:
+    "en_US": "Init nginx"
+    "zh_CN": "初始化nginx节点"
+  commands:
+    - "sh init_env.sh nginx"      
+
+-
+  name:
+    "en_US": "Install nginx"
+    "zh_CN": "安装nginx组件"
+  description:
+    "en_US": "Install nginx"
+    "zh_CN": "安装nginx组件"
+  commands:
+    - "sh install_components.sh nginx" 
+    
+-
+  name:
+    "en_US": "Install silvan nginx ha"
+    "zh_CN": "安装silvan nginx ha组件"
+  description:
+    "en_US": "Install silvan nginx ha"
+    "zh_CN": "安装silvan nginx ha组件"
+  commands:
+    - "sh install_components.sh ha_info_silvan"  
+    - "sh install_components.sh ha_nginx_silvan"  
+
+-
+  name:
+    "en_US": "Uninstall silvan nginx ha"
+    "zh_CN": "卸载silvan nginx ha组件"
+  description:
+    "en_US": "Uninstall silvan nginx ha"
+    "zh_CN": "卸载silvan nginx ha组件"
+  commands:
+    - "sh uninstall_silvan_nginx_ha.sh"
+    
+-
+  name:
+    "en_US": "Install apigateway nginx ha"
+    "zh_CN": "安装apigateway ha组件"
+  description:
+    "en_US": "Install apigateway nginx ha"
+    "zh_CN": "安装apigateway nginx ha组件"
+  commands:
+    - "sh install_components.sh ha_info_shubao"
+    - "sh install_components.sh ha_nginx_shubao"
+    
+-
+  name:
+    "en_US": "Uninstall apigateway nginx ha"
+    "zh_CN": "卸载apigateway nginx ha组件"
+  description:
+    "en_US": "Uninstall apigateway nginx ha"
+    "zh_CN": "卸载apigateway nginx ha组件"
+  commands:
+    - "sh uninstall_dmz_nginx_ha.sh"
+
+-
+  name:
+    "en_US": "Install pod apigateway ha"
+    "zh_CN": "安装pod区nginx ha组件"
+  description:
+    "en_US": "Install apigateway nginx ha for pod"
+    "zh_CN": "安装pod区apigateway nginx ha组件"
+  commands:
+    - "sh install_components.sh ha_info_pod_shubao"
+    - "sh install_components.sh ha_nginx_pod_shubao"
+
+-
+  name:
+    "en_US": "Uninstall pod apigateway ha"
+    "zh_CN": "卸载pod区nginx ha组件"
+  description:
+    "en_US": "Uninstall apigateway nginx ha for pod"
+    "zh_CN": "卸载pod区nginx ha组件"
+  commands:
+    - "sh uninstall_pod_nginx_ha.sh"
+    
+-
+  name:
+    "en_US": "check ELK-Agent Config"
+    "zh_CN": "检查ELK日志路径配置"
+  description:
+    "en_US": "Check ELK-Agent Config."
+    "zh_CN": "检查ELK日志路径配置"
+  commands:
+    - "sh install_components.sh elk"     

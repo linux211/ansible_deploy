@@ -1,0 +1,82 @@
+---
+# create a directory if it doesn't exist
+- name: create ext_scripts dir
+  sudo: yes
+  file: path={{common.zabbix_home}}/ext_scripts state=directory
+
+- name: add write permission
+  sudo: yes
+  shell: chmod 777 {{common.zabbix_home}}/ext_scripts  -R
+
+# used to monitor tomcat's blocked thread ratio
+- name: upload tomcat_blocked_threads.sh
+  sudo: yes
+  when: "'{{opsmonitorservice}}'=='tomcat'"
+  template: src=tomcat_blocked_threads.sh dest={{common.zabbix_home}}/ext_scripts/ mode='u+x,g+x,o+x' force=yes
+
+- name: dos2unix tomcat_blocked_threads.sh
+  shell: dos2unix tomcat_blocked_threads.sh
+  sudo: yes
+  when: "'{{opsmonitorservice}}'=='tomcat'"
+  args:
+      chdir: '{{common.zabbix_home}}/ext_scripts/'
+
+- name: update zabbix_agentd.conf add tomcat blocked thread monitor
+  lineinfile: dest={{common.zabbix_home}}/etc/zabbix_agentd.conf regexp='UserParameter=tomcat.blocked.threads' line='UserParameter=tomcat.blocked.threads,sh {{common.zabbix_home}}/ext_scripts/tomcat_blocked_threads.sh'
+  when: "'{{opsmonitorservice}}'=='tomcat'"
+  sudo: yes
+
+# used to monitor kafka's availability
+- name: upload monitor_kfk.sh
+  sudo: yes
+  template: src=monitor_kfk.sh dest={{common.zabbix_home}}/ext_scripts/ mode='u+x,g+x,o+x' force=yes
+  when: "'{{opsmonitorservice}}'=='zookeeper,kafka' and '{{ansible_ssh_host}}'=='{{common_ips.I_APIGW_KFK01}}'"
+
+- name: dos2unix monitor_kfk.sh
+  shell: dos2unix monitor_kfk.sh
+  sudo: yes
+  when: "'{{opsmonitorservice}}'=='zookeeper,kafka' and '{{ansible_ssh_host}}'=='{{common_ips.I_APIGW_KFK01}}'"
+  args:
+      chdir: '{{common.zabbix_home}}/ext_scripts/'
+
+- name: update zabbix_agentd.conf add kafka.available monitor
+  sudo: yes
+  lineinfile: dest={{common.zabbix_home}}/etc/zabbix_agentd.conf regexp='UserParameter=kafka.available' line='UserParameter=kafka.available, sh {{common.zabbix_home}}/ext_scripts/monitor_kfk.sh'
+  when: "'{{opsmonitorservice}}'=='zookeeper,kafka' and '{{ansible_ssh_host}}'=='{{common_ips.I_APIGW_KFK01}}'"
+
+- name: add write permission
+  sudo: yes
+  shell: chmod 550 {{common.zabbix_home}}/service/process  -R
+
+- name: add write permission
+  sudo: yes
+  shell: chmod 550 {{common.zabbix_home}}/ext_scripts  -R
+
+- name: delete sudo NOPASSWORD
+  sudo: yes
+  shell: sed -i "/{{common.opsmonitor_user}} ALL=NOPASSWD:ALL/d" /etc/sudoers
+  sudo: yes
+
+# modified {{common.zabbix_home}}/ext_scripts/ group
+- name: chown -R zabbix:zabbix ext_scripts/
+  sudo: yes
+  shell: chown -R zabbix:zabbix {{common.zabbix_home}}/ext_scripts/
+  tags: update-agentd
+
+# modified {{common.zabbix_home}}/service group
+- name: chown -R zabbix:zabbix service/
+  sudo: yes
+  shell: chown -R zabbix:zabbix {{common.zabbix_home}}/service/
+  tags: update-agentd
+
+# restart zabbix_agentd after kill zabbix_agentd process, system will start zabbix_agentd automatically
+- name: restart zabbix_agentd
+  sudo: yes
+  shell: killall zabbix_agentd
+  ignore_errors: true
+
+# maybe zabbix_agentd can't be started by system automatically, so start it manually for sake
+- name: start zabbix_agentd
+  sudo: yes
+  shell: sh {{common.zabbix_home}}/tools/cronAgent.sh
+  ignore_errors: true

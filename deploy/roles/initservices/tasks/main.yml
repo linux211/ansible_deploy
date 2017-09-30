@@ -1,0 +1,18 @@
+---
+- name: upload inittemplates.sh
+  when: "'{{changeuser}}'== 'Y'" 
+  template: src=init_change_templates.sh  dest=/etc/init.d/{{component}} mode='u+x,g+x,o+x' force=yes
+  sudo: yes
+  
+- name: upload inittemplates.sh
+  when: "'{{changeuser}}'== 'N'" 
+  template: src=inittemplates.sh  dest=/etc/init.d/{{component}} mode='u+x,g+x,o+x' force=yes
+  sudo: yes  
+ 
+- name: modify permission
+  shell: chmod 550 /etc/init.d/{{component}}   
+  sudo: yes 
+  
+- name: modify permission
+  shell: /sbin/chkconfig {{component}} on
+  sudo: yes

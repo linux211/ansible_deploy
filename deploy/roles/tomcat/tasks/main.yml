@@ -1,0 +1,74 @@
+---
+- name: upload tomcat package
+  copy: src={{tomcat.pkg_new_dir}}/{{tomcat.pkg_new_name}} dest=/opt/{{common.user_apigateway}} force=yes
+
+- name: unconfig path
+  sudo: yes
+  lineinfile: dest=/etc/profile regexp='^export PATH=\$CATALINA_HOME/bin:\$PATH' state=absent
+  tags:
+    - tomcat_uninstall
+
+- name: unconfig catalina home
+  sudo: yes
+  lineinfile: dest=/etc/profile regexp='^export CATALINA_HOME={{tomcat.catalina_home}}' state=absent
+  tags:
+    - tomcat_uninstall
+    
+- name: unconfig new version catalina home
+  sudo: yes
+  lineinfile: dest=/etc/profile regexp='^export CATALINA_HOME={{tomcat.catalina_new_home}}' state=absent
+  tags:
+    - tomcat_uninstall
+
+- name: uninstall
+  sudo: yes
+  shell: rm -rf {{tomcat.new_dir}}; rm -rf {{tomcat.new_secas_dir}};
+  tags:
+    - tomcat_uninstall
+    
+- name: create log dir
+  sudo: yes
+  file: path=/var/log/tomcat/ state=directory owner={{ansible_ssh_user}} group={{ansible_ssh_user}} mode=700      
+
+- name: untar
+  unarchive: src=/opt/{{common.user_apigateway}}/{{tomcat.pkg_new_name}} dest=/opt/{{common.user_apigateway}} copy=no 
+
+- name: rename
+  shell: mv {{tomcat.old_secas_dir}} {{tomcat.new_secas_dir}};
+  
+  #上传证书
+- name: upload certificate
+  copy: src=server.keystore dest={{tomcat.new_secas_dir}}/conf/keystore
+
+- name: config catalina home
+  sudo: yes
+  lineinfile: dest=/etc/profile regexp='^export CATALINA_HOME={{tomcat.catalina_new_home}}' line='export CATALINA_HOME={{tomcat.catalina_new_home}}'
+
+- name: config path
+  sudo: yes
+  lineinfile: dest=/etc/profile regexp='^export PATH=\$CATALINA_HOME/bin:\$PATH' line='export PATH=$CATALINA_HOME/bin:$PATH'
+
+- name: source
+  shell: source /etc/profile
+  
+- name: upload web.xml
+  sudo: yes
+  copy: src=web.xml dest={{tomcat.new_secas_dir}}/conf
+  tags:
+    - tomcat_update
+
+- name: upload server.xml
+  template: src=server.xml dest={{tomcat.new_secas_dir}}/conf
+  tags:
+    - tomcat_update
+    
+- name: upload context.xml
+  template: src=context.xml dest={{tomcat.new_secas_dir}}/conf    
+   
+- name: rm tomcat package
+  shell: rm -rf /opt/{{common.user_apigateway}}/{{tomcat.pkg_new_name}}
+  
+- name: add bin execute right
+  shell: chmod +x /opt/{{common.user_apigateway}}/tomcat/bin/*.sh
+  
+

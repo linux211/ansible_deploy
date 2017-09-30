@@ -1,0 +1,272 @@
+---
+# require install OpsMonitor-Agent
+- name: upload opsmonitor script
+  sudo: yes
+  copy: src={{opsmonitor.pkg_dir}}/{{opsmonitor.pkg_name}} dest={{common.zabbix_home}} force=yes
+
+- name: untar
+  sudo: yes
+  unarchive: src={{common.zabbix_home}}/{{opsmonitor.pkg_name}} dest={{common.zabbix_home}} copy=no
+  
+- name: upload movefile.sh
+  sudo: yes
+  template: src=movefile.sh dest={{common.zabbix_home}} mode='u+x,g+x,o+x' force=yes
+  
+- name: add write permission
+  sudo: yes
+  shell: chmod 750 {{common.zabbix_home}}/service/process -R
+ 
+- name: move file to process dir
+  sudo: yes
+  shell: sh movefile.sh
+  args:
+    chdir: '{{common.zabbix_home}}'
+
+- name: rm opsmonitor dir
+  sudo: yes
+  shell: rm -rf {{common.zabbix_home}}/opsmonitor
+ 
+- name: rm opsmonitor package
+  sudo: yes
+  shell: rm -rf {{common.zabbix_home}}/{{opsmonitor.pkg_name}}
+  
+- name: rm movefile.sh
+  sudo: yes
+  shell: rm -rf {{common.zabbix_home}}/movefile.sh
+ 
+- name: unconfig cron
+  sudo: yes
+  shell: sed -i '/cronAgent.sh$/d' /etc/crontab
+  
+# add start when os start
+- name: config cron
+  sudo: yes
+  lineinfile: dest=/etc/crontab regexp='^-*/1 * * * * zabbix sh {{common.zabbix_home}}/tools/cronAgent.sh' line='-*/1 * * * * zabbix sh {{common.zabbix_home}}/tools/cronAgent.sh'
+
+- name: restart cron
+  sudo: yes
+  shell: service cron restart
+
+- name: upload config sudoers script
+  sudo: yes
+  template: src=configsudoers.sh dest={{common.zabbix_home}} mode='u+x,g+x,o+x' force=yes
+
+- name: config sudoers
+  shell: sh configsudoers.sh
+  sudo: yes
+  args:
+    chdir: '{{common.zabbix_home}}'
+
+- name: rm configsudoers.sh
+  sudo: yes
+  shell: rm -rf {{common.zabbix_home}}/configsudoers.sh
+
+# create a directory if it doesn't exist
+- name: create ext_scripts dir
+  sudo: yes
+  file: path={{common.zabbix_home}}/ext_scripts state=directory
+  tags: update-agentd
+
+- name: add write permission
+  sudo: yes
+  shell: chmod 777 {{common.zabbix_home}}/ext_scripts  -R 
+
+- name: update zabbix_agentd.conf uninterruptible.status
+  sudo: yes
+  lineinfile: dest={{common.zabbix_home}}/etc/zabbix_agentd.conf regexp='^UserParameter=uninterruptible.status,sh {{common.zabbix_home}}/ext_scripts/uninterruptible_monitor.sh' line='UserParameter=uninterruptible.status,sh {{common.zabbix_home}}/ext_scripts/uninterruptible_monitor.sh'
+  tags: update-agentd
+
+- name: update zabbix_agentd.conf add  zombie.status
+  sudo: yes
+  lineinfile: dest={{common.zabbix_home}}/etc/zabbix_agentd.conf regexp='^UserParameter=zombie.status,sh {{common.zabbix_home}}/ext_scripts/zombie_monitor.sh' line='UserParameter=zombie.status,sh {{common.zabbix_home}}/ext_scripts/zombie_monitor.sh'
+  tags: update-agentd
+
+- name: upload uninterruptible_monitor.sh
+  sudo: yes
+  template: src=uninterruptible_monitor.sh dest={{common.zabbix_home}}/ext_scripts  force=yes  
+  tags: update-agentd
+
+- name: upload zombie_monitor.sh
+  sudo: yes
+  template: src=zombie_monitor.sh dest={{common.zabbix_home}}/ext_scripts  force=yes
+  tags: update-agentd
+
+- name: update zabbix_agentd.conf add  zombie.status
+  sudo: yes
+  lineinfile: dest={{common.zabbix_home}}/etc/zabbix_agentd.conf regexp='^UserParameter=zombie.status,sh {{common.zabbix_home}}/ext_scripts/zombie_monitor.sh' line='UserParameter=zombie.status,sh {{common.zabbix_home}}/ext_scripts/zombie_monitor.sh'
+  tags: update-agentd
+
+- name: upload process_status.sh
+  sudo: yes
+  template: src=process_status.sh dest={{common.zabbix_home}}/ext_scripts/ mode='u+x,g+x,o+x' force=yes  
+  tags: update-agentd
+
+# modified {{common.zabbix_home}}/ext_scripts/ group
+- name: chown -R zabbix:zabbix ext_scripts/
+  sudo: yes
+  shell: chown -R zabbix:zabbix {{common.zabbix_home}}/ext_scripts/
+  tags: update-agentd
+
+# modified {{common.zabbix_home}}/service group
+- name: chown -R zabbix:zabbix service/
+  sudo: yes
+  shell: chown -R zabbix:zabbix {{common.zabbix_home}}/service/
+  tags: update-agentd
+
+- name: update zabbix_agentd.conf add memcache memory monitor
+  sudo: yes
+  lineinfile: dest={{common.zabbix_home}}/etc/zabbix_agentd.conf regexp='^UserParameter=memcached.memory,sh {{common.zabbix_home}}/ext_scripts/process_status.sh memcachedmem' line='UserParameter=memcached.memory,sh {{common.zabbix_home}}/ext_scripts/process_status.sh memcachedmem'
+  when: "'{{opsmonitorservice}}'=='memcached'"
+  tags: update-agentd
+
+- name: update zabbix_agentd.conf add memcache cpu monitor
+  sudo: yes
+  lineinfile: dest={{common.zabbix_home}}/etc/zabbix_agentd.conf regexp='^UserParameter=memcached.cpu,sh {{common.zabbix_home}}/ext_scripts/process_status.sh memcachedcpu' line='UserParameter=memcached.cpu,sh {{common.zabbix_home}}/ext_scripts/process_status.sh memcachedcpu'
+  when: "'{{opsmonitorservice}}'=='memcached'"
+  tags: update-agentd
+
+- name: update zabbix_agentd.conf add memcache number monitor
+  sudo: yes
+  lineinfile: dest={{common.zabbix_home}}/etc/zabbix_agentd.conf regexp='^UserParameter=memcached.number,sh {{common.zabbix_home}}/ext_scripts/process_status.sh memcachednum' line='UserParameter=memcached.number,sh {{common.zabbix_home}}/ext_scripts/process_status.sh memcachednum'
+  when: "'{{opsmonitorservice}}'=='memcached'"
+  tags: update-agentd
+
+- name: update zabbix_agentd.conf add tomcat memory monitor
+  sudo: yes
+  lineinfile: dest={{common.zabbix_home}}/etc/zabbix_agentd.conf regexp='^UserParameter=tomcat.memory,sh {{common.zabbix_home}}/ext_scripts/process_status.sh tomcatmem' line='UserParameter=tomcat.memory,sh {{common.zabbix_home}}/ext_scripts/process_status.sh tomcatmem'
+  when: "'{{opsmonitorservice}}'=='tomcat'"
+  tags: update-agentd
+
+- name: update zabbix_agentd.conf add tomcat cpu monitor
+  sudo: yes
+  lineinfile: dest={{common.zabbix_home}}/etc/zabbix_agentd.conf regexp='^UserParameter=tomcat.cpu,sh {{common.zabbix_home}}/ext_scripts/process_status.sh tomcatcpu' line='UserParameter=tomcat.cpu,sh {{common.zabbix_home}}/ext_scripts/process_status.sh tomcatcpu'
+  when: "'{{opsmonitorservice}}'=='tomcat'"
+  tags: update-agentd
+
+- name: update zabbix_agentd.conf add tomcat number monitor
+  sudo: yes
+  lineinfile: dest={{common.zabbix_home}}/etc/zabbix_agentd.conf regexp='^UserParameter=tomcat.number,sh {{common.zabbix_home}}/ext_scripts/process_status.sh tomcatnum' line='UserParameter=tomcat.number,sh {{common.zabbix_home}}/ext_scripts/process_status.sh tomcatnum'
+  when: "'{{opsmonitorservice}}'=='tomcat'"
+  tags: update-agentd
+
+- name: update zabbix_agentd.conf add kafka memory monitor
+  sudo: yes
+  lineinfile: dest={{common.zabbix_home}}/etc/zabbix_agentd.conf regexp='^UserParameter=kafka.memory,sh {{common.zabbix_home}}/ext_scripts/process_status.sh kafkamem' line='UserParameter=kafka.memory,sh {{common.zabbix_home}}/ext_scripts/process_status.sh kafkamem'
+  when: "'{{opsmonitorservice}}'=='zookeeper,kafka'"
+  tags: update-agentd
+
+- name: update zabbix_agentd.conf add kafka cpu monitor
+  sudo: yes
+  lineinfile: dest={{common.zabbix_home}}/etc/zabbix_agentd.conf regexp='^UserParameter=kafka.cpu,sh {{common.zabbix_home}}/ext_scripts/process_status.sh kafkacpu' line='UserParameter=kafka.cpu,sh {{common.zabbix_home}}/ext_scripts/process_status.sh kafkacpu'
+  when: "'{{opsmonitorservice}}'=='zookeeper,kafka'"
+  tags: update-agentd
+
+- name: update zabbix_agentd.conf add kafka number monitor
+  sudo: yes
+  lineinfile: dest={{common.zabbix_home}}/etc/zabbix_agentd.conf regexp='^UserParameter=kafka.number,sh {{common.zabbix_home}}/ext_scripts/process_status.sh kafkanum' line='UserParameter=kafka.number,sh {{common.zabbix_home}}/ext_scripts/process_status.sh kafkanum'
+  when: "'{{opsmonitorservice}}'=='zookeeper,kafka'"
+  tags: update-agentd
+
+- name: update zabbix_agentd.conf add zookeeper memory monitor
+  sudo: yes
+  lineinfile: dest={{common.zabbix_home}}/etc/zabbix_agentd.conf regexp='^UserParameter=zookeeper.memory,sh {{common.zabbix_home}}/ext_scripts/process_status.sh zookeepermem' line='UserParameter=zookeeper.memory,sh {{common.zabbix_home}}/ext_scripts/process_status.sh zookeepermem'
+  when: "'{{opsmonitorservice}}'=='zookeeper,kafka'"
+  tags: update-agentd
+
+- name: update zabbix_agentd.conf add zookeeper cpu monitor
+  sudo: yes
+  lineinfile: dest={{common.zabbix_home}}/etc/zabbix_agentd.conf regexp='^UserParameter=zookeeper.cpu,sh {{common.zabbix_home}}/ext_scripts/process_status.sh zookeepercpu' line='UserParameter=zookeeper.cpu,sh {{common.zabbix_home}}/ext_scripts/process_status.sh zookeepercpu'
+  when: "'{{opsmonitorservice}}'=='zookeeper,kafka'"
+  tags: update-agentd
+
+- name: update zabbix_agentd.conf add zookeeper number monitor
+  sudo: yes
+  lineinfile: dest={{common.zabbix_home}}/etc/zabbix_agentd.conf regexp='^UserParameter=zookeeper.number,sh {{common.zabbix_home}}/ext_scripts/process_status.sh zookeepernum' line='UserParameter=zookeeper.number,sh {{common.zabbix_home}}/ext_scripts/process_status.sh zookeepernum'
+  when: "'{{opsmonitorservice}}'=='zookeeper,kafka'"
+  tags: update-agentd
+
+- name: update zabbix_agentd.conf add asgard memory monitor
+  sudo: yes
+  lineinfile: dest={{common.zabbix_home}}/etc/zabbix_agentd.conf regexp='^UserParameter=asgard.memory,sh {{common.zabbix_home}}/ext_scripts/process_status.sh asgardmem' line='UserParameter=asgard.memory,sh {{common.zabbix_home}}/ext_scripts/process_status.sh asgardmem'
+  when: "'{{opsmonitorservice}}'=='asgard'"
+  tags: update-agentd
+
+- name: update zabbix_agentd.conf add asgard cpu monitor
+  sudo: yes
+  lineinfile: dest={{common.zabbix_home}}/etc/zabbix_agentd.conf regexp='^UserParameter=asgard.cpu,sh {{common.zabbix_home}}/ext_scripts/process_status.sh asgardcpu' line='UserParameter=asgard.cpu,sh {{common.zabbix_home}}/ext_scripts/process_status.sh asgardcpu'
+  when: "'{{opsmonitorservice}}'=='asgard'"
+  tags: update-agentd
+
+- name: update zabbix_agentd.conf add asgard number monitor
+  sudo: yes
+  lineinfile: dest={{common.zabbix_home}}/etc/zabbix_agentd.conf regexp='^UserParameter=asgard.number,sh {{common.zabbix_home}}/ext_scripts/process_status.sh asgardnum' line='UserParameter=asgard.number,sh {{common.zabbix_home}}/ext_scripts/process_status.sh asgardnum'
+  when: "'{{opsmonitorservice}}'=='asgard'"
+  tags: update-agentd
+
+- name: update zabbix_agentd.conf add silvan memory monitor
+  sudo: yes
+  lineinfile: dest={{common.zabbix_home}}/etc/zabbix_agentd.conf regexp='^UserParameter=silvan.memory,sh {{common.zabbix_home}}/ext_scripts/process_status.sh silvanmem' line='UserParameter=silvan.memory,sh {{common.zabbix_home}}/ext_scripts/process_status.sh silvanmem'
+  when: "'{{opsmonitorservice}}'=='silvan'"
+  tags: update-agentd
+
+- name: update zabbix_agentd.conf add silvan cpu monitor
+  sudo: yes
+  lineinfile: dest={{common.zabbix_home}}/etc/zabbix_agentd.conf regexp='^UserParameter=silvan.cpu,sh {{common.zabbix_home}}/ext_scripts/process_status.sh silvancpu' line='UserParameter=silvan.cpu,sh {{common.zabbix_home}}/ext_scripts/process_status.sh silvancpu'
+  when: "'{{opsmonitorservice}}'=='silvan'"
+  tags: update-agentd
+
+- name: update zabbix_agentd.conf add silvan number monitor
+  sudo: yes
+  lineinfile: dest={{common.zabbix_home}}/etc/zabbix_agentd.conf regexp='^UserParameter=silvan.number,sh {{common.zabbix_home}}/ext_scripts/process_status.sh silvannum' line='UserParameter=silvan.number,sh {{common.zabbix_home}}/ext_scripts/process_status.sh silvannum'
+  when: "'{{opsmonitorservice}}'=='silvan'"
+  tags: update-agentd
+
+- name: update zabbix_agentd.conf add nginx memory monitor
+  sudo: yes
+  lineinfile: dest={{common.zabbix_home}}/etc/zabbix_agentd.conf regexp='^UserParameter=nginx.memory,sh {{common.zabbix_home}}/ext_scripts/process_status.sh nginxmem' line='UserParameter=nginx.memory,sh {{common.zabbix_home}}/ext_scripts/process_status.sh nginxmem'
+  when: "'{{opsmonitorservice}}'=='nginx'"
+  tags: update-agentd
+
+- name: update zabbix_agentd.conf add nginx cpu monitor
+  sudo: yes
+  lineinfile: dest={{common.zabbix_home}}/etc/zabbix_agentd.conf regexp='^UserParameter=nginx.cpu,sh {{common.zabbix_home}}/ext_scripts/process_status.sh nginxcpu' line='UserParameter=nginx.cpu,sh {{common.zabbix_home}}/ext_scripts/process_status.sh nginxcpu'
+  when: "'{{opsmonitorservice}}'=='nginx'"
+  tags: update-agentd
+
+- name: update zabbix_agentd.conf add nginx number monitor
+  sudo: yes
+  lineinfile: dest={{common.zabbix_home}}/etc/zabbix_agentd.conf regexp='^UserParameter=nginx.number,sh {{common.zabbix_home}}/ext_scripts/process_status.sh nginxnum' line='UserParameter=nginx.number,sh {{common.zabbix_home}}/ext_scripts/process_status.sh nginxnum'
+  when: "'{{opsmonitorservice}}'=='nginx'"
+  tags: update-agentd
+
+- name: add write permission
+  sudo: yes
+  shell: chmod 550 {{common.zabbix_home}}/service/process  -R 
+
+- name: add write permission
+  sudo: yes
+  shell: chmod 550 {{common.zabbix_home}}/ext_scripts  -R
+
+- name: delete sudo NOPASSWORD
+  sudo: yes
+  shell: sed -i "/{{common.opsmonitor_user}} ALL=NOPASSWD:ALL/d" /etc/sudoers
+  sudo: yes
+
+# grant zabbix
+- name: grant zabbix privilege execute /opt/apigateway/monitor_kfk.sh
+  sudo: yes
+  lineinfile: dest=/etc/sudoers regexp='^zabbix ALL=\({{common.user_apigateway}}\) NOPASSWD:/opt/{{common.user_apigateway}}/monitor_kfk.sh' line='zabbix ALL=({{common.user_apigateway}}) NOPASSWD:/opt/{{common.user_apigateway}}/monitor_kfk.sh'
+  when: "'{{opsmonitorservice}}'=='zookeeper,kafka'"
+  tags: update-agentd
+
+# restart zabbix_agentd after kill zabbix_agentd process, system will start zabbix_agentd automatically
+- name: restart zabbix_agentd
+  sudo: yes
+  shell: killall zabbix_agentd
+  ignore_errors: true
+
+# maybe zabbix_agentd can't be started by system automatically, so start it manually for sake
+- name: start zabbix_agentd
+  sudo: yes
+  shell: sh {{common.zabbix_home}}/tools/cronAgent.sh
+  ignore_errors: true

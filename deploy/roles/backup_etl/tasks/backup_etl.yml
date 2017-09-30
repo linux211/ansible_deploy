@@ -1,0 +1,17 @@
+
+- name: change package permit
+  shell: chown apigateway:apigateway etl -R
+  args:
+    chdir: 
+        '/opt/{{common.user_apigateway}}'  
+  sudo: yes
+  tags:
+    - etl_backup    
+    
+- name: backup etl 
+  shell: tar zcpf {{etl.backup_name}} etl
+  args:
+    chdir: 
+        '/opt/{{common.user_apigateway}}'
+  tags:
+    - etl_backup

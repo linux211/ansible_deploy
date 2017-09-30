@@ -1,0 +1,44 @@
+     
+- hosts: nginx
+  remote_user: '{{common.user_console}}'
+  serial: 1
+  roles:
+    - restore_nginx
+  tags:
+    - restore_nginx    
+  
+- hosts: silvan
+  remote_user: '{{common.user_console}}'
+  serial: 1
+  roles:
+    - restore_silvan
+    - health_check     
+  tags:
+    - restore_silvan    
+
+- hosts: asgard
+  remote_user: '{{common.user_apigateway}}'
+  serial: 1
+  roles:
+    - restore_asgard
+    - health_check     
+  tags:
+    - restore_asgard
+
+- hosts: shubao
+  remote_user: '{{common.user_apigateway}}'
+  serial: 1
+  roles:
+    - restore_etl
+    - health_check     
+  tags:
+    - restore_etl  
+    
+- hosts: shubao
+  remote_user: '{{common.user_apigateway}}'
+  serial: 1
+  roles:
+    - restore_shubao  
+    - health_check     
+  tags:
+    - restore_shubao

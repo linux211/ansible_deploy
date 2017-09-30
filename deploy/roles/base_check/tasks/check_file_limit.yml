@@ -1,0 +1,19 @@
+### check file handle ###
+- name: get file handle result
+  shell: ulimit -n
+  register: chk_ulimit_result
+  sudo: yes  
+
+- name: debug file limit  result
+  debug: msg="get file limit result is {{chk_ulimit_result.stdout}}"
+   
+## if check is not ok,this will modify it      
+- name: config soft file limit
+  lineinfile: dest=/etc/security/limits.conf regexp='^\* soft nofile' line='* soft nofile 65535'
+  sudo: yes
+  when: "{{chk_ulimit_result.stdout | int}} != 65535"
+
+- name: config hard file limit
+  lineinfile: dest=/etc/security/limits.conf regexp='^\* hard nofile' line='* hard nofile 65535'
+  sudo: yes  
+  when: "{{chk_ulimit_result.stdout | int}} != 65535" 

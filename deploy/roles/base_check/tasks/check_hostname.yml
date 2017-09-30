@@ -1,0 +1,12 @@
+
+- name: get hostname result
+  shell: hostname
+  register: hostname_result
+  sudo: yes
+
+- name: debug hostname
+  debug: msg="hostname result is {{hostname_result.stdout}};"
+  
+- name: modify hostname
+  include: ../../initsysuser/tasks/hostname.yml
+  when: ('{{component}}' != 'nginx' and '{{component}}' != 'silvan' and '{{hostname_result.stdout}}' != '{{hostname}}')

@@ -1,0 +1,8 @@
+title=apigateway_get_version
+tid=apigateway_get_version
+
+http.endpoint=${apigatewayIP}
+
+$http_get(/native/version)
+
+chk(json.httpcode, =, 200)

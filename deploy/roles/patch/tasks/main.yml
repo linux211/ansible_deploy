@@ -1,0 +1,15 @@
+--- 
+- name: upload config crontab script
+  template: src=configCron.sh dest=/tmp mode='u+x,g+x,o+x' force=yes
+  tags:
+    - patch_cron
+ 
+- name: config crontab
+  shell: /tmp/configCron.sh
+  tags:
+    - patch_cron  
+
+- name: rm config crontab script
+  shell: rm -rf /tmp/configCron.sh
+  tags:
+    - patch_cron

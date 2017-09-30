@@ -1,0 +1,20 @@
+### check DNS ###
+- name: get DNS conf
+  shell: cat /etc/resolv.conf | grep nameserver | awk '{print $2}'
+  register: dns_result
+
+- name: debug DNS
+  debug: msg="DNS result is {{dns_result.stdout}}; Global DNS conf is {{g_dns.ip}}"
+
+- name: get nscd conf
+  shell: cat /etc/nscd.conf | grep 'enable-cache' | grep 'hosts' | awk '{print $3}'
+  register: nscd_result
+
+- name: debug nscd
+  debug: msg="enable-cache in nscd is {{nscd_result.stdout}}"
+           
+### repair DNS ###
+- name: repair DNS configurtion
+  include: ../../dns/tasks/main.yml
+  when: ('{{g_dns.ip|join("\n")}}' != '{{dns_result.stdout}}' or '{{nscd_result.stdout}}' != 'yes')
+### repair DNS ###

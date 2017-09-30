@@ -1,0 +1,11 @@
+
+- name:  get the list of cert config
+  local_action: "shell ls -l roles/nginx/files/ssl|grep ^-|awk {'print $9'}"
+  register:  template_ssl_file 
+
+- name: upload config file to region
+  copy: src=roles/nginx/files/ssl/{{item}} dest={{nginx.ssl_dir}}
+  when: template_ssl_file.stdout != ""  
+  sudo: yes
+  with_items:
+  - "{{template_ssl_file.stdout.splitlines()}}" 

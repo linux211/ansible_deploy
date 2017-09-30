@@ -1,0 +1,114 @@
+---
+
+- local_action: stat path={{jdk.pkg_dir}}/{{jdk.pkg_name}}
+  register: jdk_package
+  tags:
+    - install_jdk
+
+- fail: 
+   msg: "The jdk package '{{jdk.pkg_dir}}/{{jdk.pkg_name}}' is not exists."
+  when: (jdk_package.stat.exists == False)
+  tags:
+    - install_jdk   
+       
+- name: set the default jdk version
+  set_fact: jdk_untar_version=1.8.0_121 jdk_rename_version=180121  jdk_version=8u121
+  when: ('{{jdk_version_start}}' not in '8,9')
+  tags:
+    - jdk_uninstall
+    - install_jdk 
+
+- name: set the jdk version 1.8.0
+  set_fact: jdk_untar_version=1.8.0_{{jdk_version_end}} jdk_rename_version=180{{jdk_version_end}}
+  when: ('{{jdk_version_start}}' == '8')
+  tags:
+    - jdk_uninstall
+    - install_jdk    
+  
+- name: set the jdk version 1.9.0
+  set_fact: jdk_untar_version=1.9.0_{{jdk_version_end}} jdk_rename_version=190{{jdk_version_end}}
+  when: ('{{jdk_version_start}}' == '9')
+  tags:
+    - jdk_uninstall
+    - install_jdk    
+  
+- name: print the set jdk version
+  debug: msg="set up the jdk version {{jdk_untar_version}}"
+  tags:
+    - jdk_uninstall
+    - install_jdk
+
+- name: unconfig java home
+  sudo: yes
+  lineinfile: dest=/etc/profile regexp='^export JAVA_HOME=/opt/{{ansible_ssh_user}}/{{item}}' state=absent
+  with_items: '{{jdk_versions}}'
+  tags:
+    - jdk_uninstall
+    - install_jdk 
+
+- name: unconfig jre home
+  sudo: yes
+  lineinfile: dest=/etc/profile regexp='^export JRE_HOME' state=absent
+
+  tags:
+    - jdk_uninstall
+    - install_jdk    
+
+- name: unconfig path  
+  sudo: yes
+  lineinfile: dest=/etc/profile regexp='\$JRE_HOME/bin:\$PATH' state=absent
+  tags:
+    - jdk_uninstall
+    - install_jdk  
+ 
+- name: uninstall java
+  file: path=/opt/{{ansible_ssh_user}}/{{item}} state=absent
+  ignore_errors: true
+  with_items: '{{jdk_versions}}'
+  sudo: yes
+  tags:
+    - jdk_uninstall
+    - install_jdk
+    
+- name: upload jdk package
+  copy: src={{jdk.pkg_dir}}/{{jdk.pkg_name}}  dest=/opt/{{ansible_ssh_user}} force=yes
+  tags:
+    - install_jdk
+     
+- name: untar
+  unarchive: src=/opt/{{ansible_ssh_user}}/{{jdk.pkg_name}} dest=/opt/{{ansible_ssh_user}} copy=no
+  tags:
+    - install_jdk
+    
+- name: rename
+  shell: mv /opt/{{ansible_ssh_user}}/{{java_tag}}{{jdk_untar_version}} /opt/{{ansible_ssh_user}}/{{java_tag}}{{jdk_rename_version}}
+  tags:
+    - install_jdk
+
+- name: config java home
+  sudo: yes
+  lineinfile: dest=/etc/profile regexp='^export JAVA_HOME' line='export JAVA_HOME=/opt/{{ansible_ssh_user}}/{{java_tag}}{{jdk_rename_version}}'
+  tags:
+    - install_jdk
+    
+- name: config jre home
+  sudo: yes
+  lineinfile: dest=/etc/profile regexp='^export JRE_HOME' line='export JRE_HOME=$JAVA_HOME'
+  tags:
+    - install_jdk
+    
+- name: config path
+  sudo: yes
+  lineinfile: dest=/etc/profile regexp='\$JRE_HOME/bin:\$PATH' line='export PATH=$JRE_HOME/bin:$PATH'
+  tags:
+    - install_jdk
+      
+- name: source
+  shell: source /etc/profile
+  tags:
+    - install_jdk
+    
+- name: remove source jdk tar
+  file: path=/opt/{{ansible_ssh_user}}/{{jdk.pkg_name}}  state=absent  
+  tags:
+    - install_jdk  

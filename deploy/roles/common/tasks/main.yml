@@ -1,0 +1,80 @@
+---
+- name: upload fixsecurity.sh
+  template: src=fixsecurity.sh  dest=/tmp/ mode='u+x,g+x,o+x' force=yes
+  tags: common-security
+  
+- name: security fix
+  shell: sh fixsecurity.sh
+  sudo: yes 
+  args:
+     chdir: '/tmp/'
+  tags: common-security
+
+- name: remove fixsecurity.sh
+  file: path=/tmp/fixsecurity.sh  state=absent    
+  tags: common-security
+  
+- name: config logrotate
+  include: ./config_logrotate.yml 
+  
+- name: config opsmonitor
+  include: ./config_monitor.yml   
+
+- name: remove the asgard version backup package 
+  file: path=/opt/{{ansible_ssh_user}}/{{item}}_asgard_backup.tar.gz  state=absent
+  ignore_errors: true
+  with_items: '{{recent_versions}}'
+  sudo: yes
+  tags:
+    - common_clean
+    
+- name: remove the shubao version backup package 
+  file: path=/opt/{{ansible_ssh_user}}/{{item}}_shubao_backup.tar.gz  state=absent
+  ignore_errors: true
+  with_items: '{{recent_versions}}'
+  sudo: yes
+  tags:
+    - common_clean  
+
+- name: remove the silvan version backup package 
+  file: path=/opt/{{ansible_ssh_user}}/{{item}}_silvan_backup.tar.gz  state=absent
+  ignore_errors: true
+  with_items: '{{recent_versions}}'
+  sudo: yes
+  tags:
+    - common_clean
+
+- name: remove the nginx version backup package 
+  file: path=/opt/{{ansible_ssh_user}}/{{item}}_nginx_backup.tar.gz  state=absent
+  ignore_errors: true
+  with_items: '{{recent_versions}}'
+  sudo: yes
+  tags:
+    - common_clean       
+  
+- name: rm bash_history
+  shell: rm -rf ~/.bash_history
+  ignore_errors: true  
+  sudo: yes    
+  tags:
+    - common_clean  
+
+- name: history -c
+  shell: history -c
+  tags:
+    - common_clean  
+
+- name: delete sudo NOPASSWORD 
+  shell: sed -i "/{{common.user_apigateway}} ALL=NOPASSWD:ALL/d" /etc/sudoers
+  sudo: yes  
+  tags:
+    - common_clean  
+  
+- name: delete sudo NOPASSWORD 
+  shell: sed -i "/{{common.user_console}} ALL=NOPASSWD:ALL/d" /etc/sudoers
+  sudo: yes
+  tags:
+    - common_clean  
+  
+  
+

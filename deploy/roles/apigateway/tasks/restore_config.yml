@@ -1,0 +1,37 @@
+# check is the shubao go version
+- stat: path={{apigateway.script_home}}/conf
+  register: shubao_go_version
+  
+- name: set default restore dir
+  set_fact: restore_dir=/opt/apigateway/shubao/conf     
+  
+- name: set restore dir
+  set_fact: restore_dir=/opt/apigateway/shubao/conf
+  when: shubao_go_version.stat.isdir is defined and shubao_go_version.stat.isdir
+  
+- stat: path={{tomcat.new_secas_dir}}
+  register: p_new_tomcat
+
+- stat: path={{tomcat.new_dir}}
+  register: p_old_tomcat
+  
+# set the tomcat version    
+- name: tomcat new restore dir
+  set_fact: restore_dir=/opt/{{common.user_apigateway}}/tomcat/webapps/apigateway/WEB-INF/classes/config
+  when:  (p_new_tomcat.stat.isdir is defined and p_new_tomcat.stat.isdir) 
+  
+- name: tomcat old dir restore dir
+  set_fact: restore_dir=/opt/{{common.user_apigateway}}/tomcat{{common.tomcat_rename_version}}/webapps/apigateway/WEB-INF/classes/config
+  when:  (p_old_tomcat.stat.isdir is defined and p_old_tomcat.stat.isdir)  
+
+- name: make temp dir
+  file: path=/opt/{{common.user_apigateway}}/temp force=true state=directory
+
+- name: copy the file
+  template: src=restore_file.sh dest=/opt/{{common.user_apigateway}}/temp mode='u+x,g+x,o+x' force=yes
+
+- name: run restore script
+  shell: sh /opt/{{common.user_apigateway}}/temp/restore_file.sh
+
+- name: delete  script file
+  file: path=/opt/{{common.user_apigateway}}/temp force=true state=absent  

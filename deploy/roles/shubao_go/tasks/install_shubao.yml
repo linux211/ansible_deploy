@@ -1,0 +1,100 @@
+---
+- stat: path={{apigateway.script_home}}/conf
+  register: p
+  tags:
+    - shubao_go_uninstall
+    - stop_shubao    
+    
+- name: stop shubao crontab
+  shell: service cron stop
+  when:  p.stat.isdir is defined and p.stat.isdir  
+  sudo: yes 
+  tags:
+    - shubao_go_uninstall 
+    - stop_shubao    
+
+- name: stop
+  shell: sh {{apigateway.script_home}}/bin/shubao_monitor.sh stop
+  when:  p.stat.isdir is defined and p.stat.isdir
+  ignore_errors: true
+  tags:
+    - shubao_go_uninstall
+    - stop_shubao
+
+- name: uninstall
+  shell: rm -rf {{apigateway.script_home}}
+  when:  p.stat.isdir is defined and p.stat.isdir
+  ignore_errors: true
+  sudo: yes
+  tags:
+    - shubao_go_uninstall
+
+- name: create log dir
+  sudo: yes
+  file: path={{common.apigateway_log}} state=directory owner={{ansible_ssh_user}} group={{ansible_ssh_user}} mode=700
+
+- name: create install dir
+  sudo: yes
+  file: path={{shubao_go.home}} state=directory owner={{ansible_ssh_user}} group={{ansible_ssh_user}} mode=700
+
+- name: upload shubao package
+  copy: src={{shubao_go.pkg_dir}}/{{shubao_go.pkg_name}} dest={{shubao_go.home}} force=yes
+
+- name: untar shubao package
+  unarchive: src={{shubao_go.home}}/{{shubao_go.pkg_name}} dest={{shubao_go.home}}  copy=no
+
+- name: config shubao_app.json
+  template: src=shubao_app.json dest={{shubao_go.script_home}}/conf
+  
+- name: config cassandra_config.json
+  template: src=cassandra_config.json dest={{shubao_go.script_home}}/conf 
+
+- name: config ces_reporter_config.json
+  template: src=ces_reporter_config.json dest={{shubao_go.script_home}}/conf  
+
+- name: config kafka.json
+  template: src=kafka.json dest={{shubao_go.script_home}}/conf
+  
+- name: config oc key
+  template: src=oc-key dest={{shubao_go.script_home}}/conf  
+
+- name: config crontab
+  sudo: yes
+  lineinfile: dest=/etc/crontab regexp='^\*/1 \* \* \* \* {{common.user_apigateway}}  sh /opt/{{common.user_apigateway}}/shubao/bin/shubao_monitor.sh check' line='*/1 * * * * {{common.user_apigateway}}  sh /opt/{{common.user_apigateway}}/shubao/bin/shubao_monitor.sh check'
+
+- name: rm shubao package
+  shell: rm -rf {{shubao_go.home}}/{{shubao_go.pkg_name}}
+  tags:
+    - shubao_go_uninstall
+
+- name: chown -R apigateway:apigateway /opt/apigateway
+  sudo: yes
+  shell: chown -R apigateway:apigateway {{shubao_go.home}}
+
+- name: chown -R apigateway:apigateway /var/log/apigateway
+  sudo: yes
+  shell: chown -R apigateway:apigateway {{common.apigateway_log}}
+  
+- name: restart crontab
+  shell: service cron restart
+  sudo: yes  
+  
+  ### upload the kms cert ###
+- name: upload the kms cert file
+  include: ./upload_cert.yml  
+  
+## check backup file exit
+- stat: path=/opt/{{common.user_apigateway}}/{{shubao_go.backup_name}}
+  register: p_shubao_pkg
+  
+### restor the config file ###
+- name: restore the config file
+  include: ./restore_config.yml  
+  when:  p_shubao_pkg is defined and p_shubao_pkg.stat.exists
+  
+- name: restart shubao services
+  shell: sh {{shubao_go.script_home}}/bin/shubao_monitor.sh restart
+  ignore_errors: true  
+  tags:
+    - shubao_go_restart
+

@@ -1,0 +1,20 @@
+
+- name: config UDS endpoint
+  lineinfile: dest={{gaussdb.backup_config_file}} regexp='^endpoint:' line='endpoint:{{g_current_region.uds.api.ip}}'
+  sudo: yes
+ 
+- name: config UDS ak
+  lineinfile: dest={{gaussdb.backup_config_file}}  regexp='^ak:' line='ak:{{data_backup.uds.ak}}'
+  sudo: yes  
+  
+- name: config UDS sk1
+  lineinfile: dest={{gaussdb.backup_config_file}}  regexp='^sk1:' line='sk1:{{data_backup.uds.sk1}}'
+  sudo: yes 
+
+- name: config UDS sk2
+  lineinfile: dest={{gaussdb.backup_config_file}}  regexp='^sk2:' line='sk1:{{data_backup.uds.sk2}}'
+  sudo: yes    
+  
+- name: config UDS bucket
+  lineinfile: dest={{gaussdb.backup_config_file}} regexp='^bucket:' line='bucket:{{g_current_region.uds.bucket}}'
+  sudo: yes  

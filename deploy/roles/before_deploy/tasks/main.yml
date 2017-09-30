@@ -1,0 +1,54 @@
+---
+### check cpu ###
+- name: Check the cpu numbers and cores
+  debug: msg="cpu numbers:{{ ansible_processor_count }};cpu cores:{{ ansible_processor_cores }}"
+  tags: cpu
+
+- name: Check the Memory size
+  debug: msg="memory size:{{ ansible_memtotal_mb }} MB"
+  tags: memory
+  
+  ## mem more then 4G
+- fail: msg="Failure this node requires MEM more than 4G ,the node actual MEM is {{ansible_memtotal_mb}}MB"
+  when: ({{ ansible_memtotal_mb }}< 4000 )  
+  
+
+- name: Check the data disk size
+  shell: parted -l 2>/dev/null|awk -F/ '$1~/^Disk/&&/\dev\/[a-z][a-z][a-z]?[a-z]:/{print $3}'
+  register: data_disk_size
+  sudo: yes
+
+- name: Check the disk size
+  debug: msg="{{data_disk_size.stdout_lines}}"
+  tags: disk
+
+- name: Check ips; some nodes should have two ips
+  debug: msg='ipv4 info:{{ ansible_all_ipv4_addresses }}'
+  tags: ip
+  
+## check user home dir is exist
+
+- name: home path check
+  stat: path=/opt/{{ansible_ssh_user}}
+  register: p_home
+    
+- name: Check ips; some nodes should have two ips
+  debug: msg='ipv4 info:{{ ansible_all_ipv4_addresses }}'
+  tags: ip
+  ## pod nginx requires a dual NIC
+- fail: msg="Failure this node requires a dual NIC ,the node actual NIC is {{ansible_all_ipv4_addresses|length}}"
+  when: ({{ ispod | default(false)}} == true and {{ansible_all_ipv4_addresses|length}} < 2 )
+
+  ## register route 
+- name: get the pod lb route info
+  shell: route -n | grep UG | grep {{pod_lb_gw}}|wc -l
+  register: route_num
+  sudo: yes
+  
+- name: get the pod routes
+  debug: msg="{{route_num.stdout}}"
+  tags: ip  
+
+  # pod nginx requires a dual NIC
+- fail: msg="Failure the pod lb node must add route in gateway {{pod_lb_gw}}"
+  when: ({{ ispod | default(false)}} == true and {{route_num.stdout | int}} < 1 )         

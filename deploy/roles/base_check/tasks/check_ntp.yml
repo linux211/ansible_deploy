@@ -1,0 +1,56 @@
+### check ntp ###
+- name: check ntp process exist
+  shell: ps -wwef | grep ntp | grep -v grep
+  register: ps_ntp
+  ignore_errors: true
+
+- name: restart ntp service
+  shell: service ntp restart || service ntpd restart
+  sudo: yes
+  when: ps_ntp.rc == 1
+
+- name: check ntp.config
+  shell: cat /etc/ntp.conf  | grep ^server | awk '{print$2}'
+  register: ntp_result
+  sudo: yes
+
+- name: debug ntp
+  debug: msg="ntp result is {{ntp_result.stdout}}; Global ntp conf is {{g_ntp.ip}}"
+  
+- name: get ntpq -p result
+  shell: ntpq -p | awk '{print $1}'| awk 'NR>2 {print}'
+  register: ntp_status_result
+  sudo: yes 
+  
+- name: debug ntp status
+  debug: msg="ntp status result is {{ntp_status_result.stdout}}; Global ntp conf is {{g_ntp.ip}}"    
+  
+### repair NTP ###
+- name: repair NTP configurtion
+  include: ../../ntp/tasks/main.yml ntp_items={{ntp_result}}
+  when: ('{{g_ntp.ip|join("\n")}}' != '{{ntp_result.stdout}}' or '{{ntp_status_result.stdout}}'=='' or 'LOCAL' in '{{ntp_status_result.stdout}}')
+    
+- name: check ntp process exist
+  shell: ntpq -p
+  register: ntpq
+  sudo: yes
+
+- name: ntp -q status
+  assert:
+    that:
+      - "ntpq.rc == 0"
+      
+- name: get chkconfig ntp result
+  shell: chkconfig ntp || chkconfig ntpd
+  register: chkconfig_ntp_result
+  ignore_errors: true
+  sudo: yes
+
+- name: debug chkconfig ntp
+  debug: msg="chkconfig ntp result is {{chkconfig_ntp_result.stdout}}"
+
+- name: chkconfig ntp on
+  shell: chkconfig ntp on || chkconfig ntpd on
+  sudo: yes
+  when:
+      - "'on' or 'enabled' not in '{{chkconfig_ntp_result.stdout}}'"  

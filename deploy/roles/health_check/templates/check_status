@@ -1,0 +1,237 @@
+#!/bin/sh
+
+source /etc/profile
+
+component="{{component}}"
+PROGRAM_KAFKA=kafka.Kafka
+KAFKA_PORT={{common.kafka_port}}
+PROGRAM_ZOOKEEPER="QuorumPeerMain"
+PROGRAM_CASSANDRA="CassandraDaemon"
+CASSANDRA_PORT=9042
+ZOOKEEPER_PORT={{common.zookeeper_client_port}}
+CMD_ZOOKEEPER_STATUS="/opt/apigateway/zookeeper/bin/zkServer.sh status"
+PROGRAM_TOMCAT="/opt/apigateway/tomcat"
+PROGRAM_SHUBAO="shubao"
+PROGRAM_MEMCACHED="memcached"
+SHUBAO_PORT={{apigateway.https_port}}
+MEMCACHED_PORT={{common.memcache_port}}
+PROGRAM_ASGARD="asgard"
+PROGRAM_SILVAN="silvan"
+PROGRAM_ETL="etl-bootstarp"
+
+CHECK_RESULT={{tmp_dir}}/checkResult
+
+true > $CHECK_RESULT
+
+function log()
+{
+    echo $1 >> $CHECK_RESULT
+}
+
+
+isShubaoOk()
+{
+     ## check  process
+        shubaoCount=`ps -ef | grep -E ${PROGRAM_SHUBAO}\|${PROGRAM_TOMCAT} | grep -v grep | wc -l`
+    if [ ${shubaoCount} -ne 1 ];then
+        log "shubao process is not Ok"
+        return 1
+    fi
+
+    ## check  port
+    isPortExist=$(netstat -nlt | grep ${SHUBAO_PORT})
+    if [ -z "${isPortExist}" ]; then
+        log "process port $SHUBAO_PORT not exist!"
+        return 1
+    fi
+
+    # time(second): wait for connection
+    local CONNECT_TIMEOUT=30
+
+    # time(second): transfer data
+    local TRANS_TIMEOUT=10
+
+    declare -i status_code=`curl -k -i --connect-timeout ${CONNECT_TIMEOUT} -m ${TRANS_TIMEOUT} https://{{ansible_ssh_host}}:${SHUBAO_PORT}/native/version | awk 'NR==1{print}' | awk '{print $2}'`
+    if [ ${status_code} -ge 200 ] && [ ${status_code} -lt 300 ]; then 
+        return 0
+    else
+        log "shubao api is not Ok"
+        return 1
+    fi
+	
+    return 0
+}
+
+isSilvanOk()
+{
+    ## check silvan process
+    silvanCount=`ps -ef | grep ${PROGRAM_SILVAN} | grep -v grep | wc -l`
+    if [ ${silvanCount} -ne 1 ];then
+        log "silvan process is not Ok"
+        return 1
+    fi
+    
+    ## check silvan business 
+    # time(second): wait for connection
+    local CONNECT_TIMEOUT=30
+
+    # time(second): transfer data
+    local TRANS_TIMEOUT=10
+
+    declare -i status_code=`curl -k -i --silent --connect-timeout ${CONNECT_TIMEOUT} -m ${TRANS_TIMEOUT} https://{{ansible_ssh_host}}:{{silvan.sec_port}}/silvan/rest/v1.0/health-check | awk 'NR==1{print}' | awk '{print $2}'`
+    if [ ${status_code} -ge 200 ] && [ ${status_code} -lt 300 ]; then
+        return 0
+    else
+        log "silvan api is not Ok"
+        return 1
+    fi
+	
+    return 0
+}
+
+
+isAsgardOk()
+{
+    ## check asgard process
+    asgardCount=`ps -ef | grep ${PROGRAM_ASGARD} | grep -v grep | wc -l`
+    if [ ${asgardCount} -ne 1 ];then
+        log "asgard process is not Ok"
+        return 1
+    fi
+
+    return 0
+}
+
+
+isZookeeperOk()
+{
+    ## check zookeeper process
+    zookeeperCount=`ps -ef | grep ${PROGRAM_ZOOKEEPER} | grep -v grep | wc -l`
+    if [ ${zookeeperCount} -ne 1 ];then
+        log "zookeeper process is not Ok"
+        return 1
+    fi
+
+    ## check zookeeper port
+    isPortExist=$(netstat -nlt | grep ${ZOOKEEPER_PORT})
+    if [ -z "${isPortExist}" ]; then
+        log "zookeeper port $ZOOKEEPER_PORT not exist!"
+        return 1
+    fi
+
+    ## check zookeeper status
+    zookeeperStatus=$($CMD_ZOOKEEPER_STATUS | grep Error | wc -l)
+    if [ ${zookeeperStatus} -ne 0 ];then
+        log "zookeeper cluster is not Ok"
+        return 1
+    fi
+
+    return 0
+}
+
+
+isKafkaOk()
+{
+    ## check kafka process
+    kafkaCount=`ps -ef | grep ${PROGRAM_KAFKA} | grep -v grep | wc -l`
+    if [ ${kafkaCount} -ne 1 ];then
+        log "kafka process is not Ok"
+        return 1
+    fi
+
+    ## check kafka port
+    isPortExist=$(netstat -nlt | grep ${KAFKA_PORT})
+    if [ -z "${isPortExist}" ]; then
+        log "kafka port $KAFKA_PORT not exist!"
+        return 1
+    fi
+    return 0
+}
+
+isCassandraOk()
+{
+    ## check CASSANDRA process
+    cassandraCount=`ps -ef | grep ${PROGRAM_CASSANDRA} | grep -v grep | wc -l`
+    if [ ${cassandraCount} -ne 1 ];then
+        log "cassandra process is not Ok"
+        return 1
+    fi
+
+    ## check kafka port
+    isPortExist=$(netstat -nlt | grep ${CASSANDRA_PORT})
+    if [ -z "${isPortExist}" ]; then
+        log "cassandra port $CASSANDRA_PORT not exist!"
+        return 1
+    fi
+    
+    return 0
+}
+
+isEtlOk()
+{
+    ## check kafka process
+    etlCount=`ps -ef | grep ${PROGRAM_ETL} | grep -v grep | wc -l`
+    if [ ${etlCount} -ne 1 ];then
+        log "etl process is not Ok"
+        return 1
+    fi
+    return 0
+}
+
+isMemcachedOk()
+{
+    ## check memcached process
+    memcachedCount=`ps -ef | grep ${PROGRAM_MEMCACHED} | grep -v grep | wc -l`
+    if [ ${memcachedCount} -ne 1 ];then
+        log "memcached process is not Ok"
+        return 1
+    fi
+
+    ## check memcached port
+    isPortExist=$(netstat -nlt | grep ${MEMCACHED_PORT})
+    if [ -z "${isPortExist}" ]; then
+        log "memcached port $MEMCACHED_PORT not exist!"
+        return 1
+    fi
+    
+    return 0
+}
+
+
+## check node type and status
+checkHealth()
+{
+    if [ "$component" == "shubao" ] ; then
+        isShubaoOk
+    fi
+
+    if [ "$component" == "asgard" ] ; then
+        isAsgardOk
+    fi
+
+    if [ "$component" == "kafka" ]; then
+        isKafkaOk
+        isZookeeperOk
+    fi
+
+    if [ "$component" == "memcached" ]; then
+       isMemcachedOk
+    fi
+    
+    if [ "$component" == "silvan" ] ; then
+       isSilvanOk
+    fi
+    
+    if [ "$component" == "cassandra" ] ; then
+       isCassandraOk
+       isEtlOk
+    fi
+}
+
+checkHealth
+
+if [ -s "${CHECK_RESULT}" ]; then
+    echo "False"
+else
+    echo "True" 
+fi

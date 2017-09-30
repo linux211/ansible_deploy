@@ -1,0 +1,118 @@
+---
+
+- name: add sudo no password permission
+  lineinfile: dest=/etc/sudoers regexp='^{{common.user_apigateway}} ALL=NOPASSWD:ALL' line='{{common.user_apigateway}} ALL=NOPASSWD:ALL'
+  sudo: yes 
+  tags:
+    - kafka_uninstall
+
+- stat: path=/opt/{{common.user_apigateway}}/kafka/
+  register: p 
+  tags:
+    - kafka_uninstall 
+    - stop_kafka
+    
+- name: stop crontab
+  shell: service cron stop
+  when:  p.stat.isdir is defined and p.stat.isdir  
+  sudo: yes 
+  tags:
+    - shubao_go_uninstall 
+    - stop_kafka
+
+- name: kafka stop
+  shell: ./stop_kafka.sh
+  when:  p.stat.isdir is defined and p.stat.isdir
+  ignore_errors: true
+  args:
+    chdir: '/opt/{{common.user_apigateway}}/kafka/bin'
+  tags:
+    - kafka_uninstall
+    - stop_kafka
+
+- name:  kafka uninstall
+  shell: sh /opt/{{common.user_apigateway}}/kafka/install/kafka_uninstall.sh
+  when:  p.stat.isdir is defined and p.stat.isdir
+  ignore_errors: true
+  tags:
+    - kafka_uninstall
+
+- name: create log dir
+  sudo: yes
+  file: path={{common.apigateway_log}} state=directory owner={{ansible_ssh_user}} group={{ansible_ssh_user}} mode=700     
+    
+- name: upload kafka install package
+  copy: src={{kafka.pkg_dir}}/{{kafka.pkg_name}} dest=/opt/{{common.user_apigateway}} force=yes
+
+- name: remove install dir
+  file: path=/opt/{{common.user_apigateway}}/kafka/ state=absent  
+  sudo: yes 
+
+- name: untar kafka install package
+  unarchive: src=/opt/{{common.user_apigateway}}/{{kafka.pkg_name}} dest=/opt/{{common.user_apigateway}}/  copy=no
+  
+- name:  config excute command
+  shell: chmod +x /opt/{{common.user_apigateway}}/kafka/install/*.sh 
+  
+- name: config kafka service user
+  lineinfile: dest=/opt/{{common.user_apigateway}}/kafka/install/kafka_install.cfg regexp='^SERVICE_USER=' line='SERVICE_USER={{common.user_apigateway}}'
+  
+- name: config kafka broker number
+  lineinfile: dest=/opt/{{common.user_apigateway}}/kafka/install/kafka_install.cfg regexp='^BROKER_NUMBER=' line='BROKER_NUMBER={{local_id}}'
+  
+- name: config kafka broker number
+  lineinfile: dest=/opt/{{common.user_apigateway}}/kafka/install/kafka_install.cfg regexp='^FILE_NAME=' line='FILE_NAME={{kafka.pkg_install_name}}'
+  
+- name: config kafka ip
+  lineinfile: dest=/opt/{{common.user_apigateway}}/kafka/install/kafka_install.cfg regexp='^IP=' line='IP={{ansible_ssh_host}}'
+
+- name: config kafka port
+  lineinfile: dest=/opt/{{common.user_apigateway}}/kafka/install/kafka_install.cfg regexp='^PORT=' line='PORT={{common.kafka_port}}'
+  
+- name: config kafka zookeeper list
+  lineinfile: dest=/opt/{{common.user_apigateway}}/kafka/install/kafka_install.cfg regexp='^ZOOKEPERLIST=' line='ZOOKEPERLIST={{zookeeper.hosts | join(",")}}'
+  
+- name: dos2unix
+  shell: dos2unix  *.*
+  args:
+    chdir: '/opt/{{common.user_apigateway}}/kafka/install'  
+  
+- name: install
+  shell: sh kafka_install.sh
+  args:
+    chdir: '/opt/{{common.user_apigateway}}/kafka/install'
+
+# 设置kafka消息留存时间，6小时
+- name: config kafka store time
+  lineinfile: dest=/opt/{{common.user_apigateway}}/kafka/config/server.properties regexp='^log.retention.hours=' line='log.retention.hours=6'
+
+# 设置kafka消息留存大小，200*1024*1024*1024=214748364800=200G
+- name: config kafka store size
+  lineinfile: dest=/opt/{{common.user_apigateway}}/kafka/config/server.properties regexp='^log.retention.bytes=' line='log.retention.bytes=214748364800'
+
+- name: rm kafka package
+  shell: rm -rf /opt/{{common.user_apigateway}}/{{kafka.pkg_name}}
+
+- name: delete sudo NOPASSWORD 
+  shell: sed -i "/{{common.user_apigateway}} ALL=NOPASSWD:ALL/d" /etc/sudoers
+  sudo: yes 
+  tags:
+    - kafka_uninstall
+
+- name: restart crontab
+  shell: service cron restart
+  sudo: yes 
+
+- name: start
+  shell: sh monitor_kafka.sh restart
+  args:
+    chdir: '/opt/{{common.user_apigateway}}/kafka/bin'
+  tags:
+    - kafka_restart
+  
+- name: add topics
+  shell: source /etc/profile;/opt/{{common.user_apigateway}}/kafka/bin/kafka-topics.sh --create --zookeeper {{zookeeper.hosts | join(',')}} --replication-factor 3 --partitions 10 --topic {{item}}
+  with_items: '{{kafka_topics}}'
+  ignore_errors: true
+  tags:
+    - add_topics

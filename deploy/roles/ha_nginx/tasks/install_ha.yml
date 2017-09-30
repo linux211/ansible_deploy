@@ -1,0 +1,166 @@
+---
+- name: add onframework sudo no password
+  lineinfile: dest=/etc/sudoers regexp='^onframework ALL=NOPASSWD:ALL' line='onframework ALL=NOPASSWD:ALL' 
+  sudo: yes
+    
+- stat: path=/opt/{{common.user_console}}/ha
+  register: p 
+  sudo: yes   
+  tags:
+    - ha_uninstall  
+  
+- name: uninstall ha
+  shell: cd {{ha_nginx.make_dir}};  sh uninstall_all.sh
+  when:  p.stat.isdir is defined and p.stat.isdir
+  sudo: yes
+  ignore_errors: true
+  tags:
+    - ha_uninstall
+    
+# remove the other record in /etc/sudoers    
+- name: clean the sudoers file
+  shell: sed -i "/onframework ALL=(root) NOPASSWD/d" {{common.etc_sudoer_path}}
+  sudo: yes
+  tags:
+    - ha_uninstall  
+
+  # 拷贝ha_nginx安装包
+- name: upload ha_nginx package 
+  copy: src={{ha_nginx.pkg_dir}}/{{ha_nginx.pkg_name}} dest={{common.home_dir}} force=yes
+  
+- name: untar
+  unarchive: src={{common.home_dir}}/{{ha_nginx.pkg_name}} dest={{ha_nginx.untar_dir}} copy=no
+  
+- name: set nodeName
+  set_fact: ha_primary_node_name={{ha_standby_remote_node_name}} ha_primary_local_ip={{ha_standby_remote_ip}}  ha_primary_local_mask={{ha_standby_local_mask}} ha_primary_local_gateway={{ha_standby_local_gateway}} ha_standby_remote_node_name={{ha_primary_node_name}}  ha_standby_remote_ip={{ha_primary_local_ip}} ha_primary_itf_name={{ha_standby_itf_name}}
+  when:  "'{{IS_PRIMARY}}'=='ha_standby'"
+  
+- name: config ha nodeName
+  lineinfile: dest={{ha_nginx.ha_config_file}} regexp='^nodeName=' line='nodeName={{ha_primary_node_name}}'
+- name: config ha localIP
+  lineinfile: dest={{ha_nginx.ha_config_file}} regexp='^localIP=' line='localIP={{ha_primary_local_ip}}'
+- name: config ha localMask
+  lineinfile: dest={{ha_nginx.ha_config_file}} regexp='^localMask=' line='localMask={{ha_primary_local_mask}}'
+- name: config ha localGateWay
+  lineinfile: dest={{ha_nginx.ha_config_file}} regexp='^localGateWay=' line='localGateWay={{ha_primary_local_gateway}}'
+- name: config ha floatIP
+  lineinfile: dest={{ha_nginx.ha_config_file}} regexp='^floatIP=' line='floatIP={{float_ip}}'
+- name: config ha remoteNodeName
+  lineinfile: dest={{ha_nginx.ha_config_file}} regexp='^remoteNodeName=' line='remoteNodeName={{ha_standby_remote_node_name}}'
+- name: config ha remoteIp
+  lineinfile: dest={{ha_nginx.ha_config_file}} regexp='^remoteIp=' line='remoteIp={{ha_standby_remote_ip}}'
+- name: config ha haArbitrationIP
+  lineinfile: dest={{ha_nginx.ha_config_file}} regexp='^haArbitrationIP=' line='haArbitrationIP={{ha_primary_arbitration_ip}}'
+- name: config ha itfName
+  lineinfile: dest={{ha_nginx.ha_config_file}} regexp='^itfName=' line='itfName={{ha_primary_itf_name}}'
+
+- name: modify install shell
+  shell: sed -ri -e "s#(-s)(.*)#-o#" {{ha_nginx.make_dir}}/install_all.sh
+  
+- name: modify install shell
+  shell: sed -i "s#export LC_ALL=posix#export LC_ALL=POSIX#" /opt/onframework/ha/tools/gmninit.sh
+
+- name: remove the function prepareDb
+  shell: sed -i '/prepareDb/{x;s/^/./;/^\.\{3\}$/{x;s/.*/\#prepareDb/;x};x;}' {{ha_nginx.make_dir}}/install_all.sh 
+
+- name: create a empty .bashrc file
+  shell: mkdir -p  /home/onframework/ ;  touch  /home/onframework/.bashrc
+  sudo: yes
+
+- name: install
+  shell: sh install_all.sh
+  sudo: yes
+  ignore_errors: true
+  args:
+    chdir: '{{ha_nginx.make_dir}}' 
+
+  #为ha添加nginx的资源配置文件
+- name: upload nginx config
+  copy: src=nginx.xml dest={{ha_nginx.ha_resource_conf_path}}
+  sudo: yes  
+  
+  # 删除无效的资源配置文件
+- name: remove gsdb.xml 
+  file: path={{ha_nginx.ha_resource_conf_path}}/gsdb.xml  state=absent force=yes
+  sudo: yes
+  ignore_errors: true
+
+
+- name: add x
+  shell: find /opt/onframework/ha -name "*.sh" | xargs -i chmod 500 {}
+  sudo: yes
+
+- name: add x
+  shell: find /opt/onframework/ha -name "*.bin" | xargs -i chmod 500 {}
+  sudo: yes
+
+- name: add x
+  shell: find /opt/onframework/ha -name "*_tool" | xargs -i chmod 500 {}   
+  
+  sudo: yes
+  
+- name: add x
+  shell: chmod 550  /opt/onframework/ha/install/dbpkg -R 
+  sudo: yes
+
+  # 修改文件所有者
+- name: change ha permisson
+  shell: chown root:root /opt/{{common.user_console}}/ha -R
+  sudo: yes
+  tags:
+    - ha_update
+
+  # 删除无效权限
+- name: remove dbadmin  
+  shell: sed -i "/dbadmin ALL=(root) NOPASSWD/d" {{common.etc_sudoer_path}}
+  sudo:  yes
+  tags:
+    - remove-dbadmin 
+
+  # 移除无效信息
+- name: remove chown
+  lineinfile: dest={{common.etc_sudoer_path}} regexp='^onframework' line='onframework ALL=(root) NOPASSWD:/opt/onframework/ha/tools/gmnEx.sh,/opt/onframework/ha/bin/QueryHaState,/opt/onframework/ha/bin/ha_switch'
+  sudo:  yes
+  tags:
+  - remove-dbadmin 
+
+  # 重启ha
+- name: stop ha
+  shell: sh stop_ha.sh
+  sudo: yes
+  args:
+    chdir: '{{ha_nginx.ha_script_bin_path}}'
+  tags:
+    - ha_update 
+    - stop_ha       
+
+- name: start ha
+  shell: sh start_ha.sh
+  sudo: yes
+  ignore_errors: true
+  args:
+    chdir: '{{ha_nginx.ha_script_bin_path}}'
+  tags:
+    - ha_update    
+
+- name: delete sudo NOPASSWORD 
+  shell: sed -i "/{{common.user_console}} ALL=NOPASSWD:ALL/d" {{common.etc_sudoer_path}}
+  sudo: yes
+  tags:
+    - ha_uninstall
+  
+  # restart nginx
+- name: restart
+  sudo: yes
+  shell: ./nginx_monitor.sh restart
+  ignore_errors: true
+  args:
+    chdir: '{{nginx.bin_dir}}'
+  tags:
+    - restart  
+
+- name: rm ha package
+  shell: rm -rf {{common.home_dir}}/{{ha_nginx.pkg_name}}
+  sudo: yes
+  tags:
+    - ha_uninstall  

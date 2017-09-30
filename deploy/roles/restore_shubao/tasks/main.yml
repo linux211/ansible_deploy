@@ -1,0 +1,93 @@
+- stat: path=/opt/{{common.user_apigateway}}/{{shubao_go.backup_name}}
+  register: p_pkg
+
+- name: check backup file is exist
+  assert:
+    that:
+      - "p_pkg is defined and p_pkg.stat.exists"  
+
+- stat: path={{apigateway.script_home}}/bin/shubao_monitor.sh
+  register: p_shubao_go
+  tags:
+    - shubao_go_backup
+  
+- name: stop shubao
+  shell: sh shubao_monitor.sh stop
+  when:  p_shubao_go.stat.isdir is defined and p_shubao_go.stat.exists
+  args:
+    chdir: '/opt/{{common.user_apigateway}}/shubao/bin/'
+  ignore_errors: true
+  tags:
+    - shubao_restore
+    
+- stat: path={{apigateway.script_home}}/bin/tomcat_monitor.sh
+  register: p_shubao
+  tags:
+    - shubao_go_backup    
+    
+- name: stop tomcat
+  shell: sh tomcat_monitor.sh stop
+  when:  p_shubao is defined and p_shubao.stat.exists
+  args:
+    chdir: '/opt/{{common.user_apigateway}}/shubao/bin/'
+  ignore_errors: true
+  tags:
+    - shubao_restore    
+    
+- name: remove shubao 
+  file: path=/opt/{{common.user_apigateway}}/shubao  state=absent  force=yes
+  sudo: yes
+  tags:
+    - shubao_restore
+    
+- name: remove tomcat 
+  file: path=/opt/{{common.user_apigateway}}/tomcat  state=absent  force=yes
+  sudo: yes
+  tags:
+    - shubao_restore 
+
+- name: remove tomcat7059 
+  file: path=/opt/{{common.user_apigateway}}/tomcat7059  state=absent  force=yes
+  sudo: yes
+  tags:
+    - shubao_restore     
+    
+- name: unzip shubao
+  shell: tar zxvf {{shubao_go.backup_name}}
+  args:
+    chdir: '/opt/{{common.user_apigateway}}/'
+  tags: 
+   - shubao_restore
+   
+- stat: path={{apigateway.script_home}}/bin/shubao_monitor.sh
+  register: p_shubao_go_restore
+  tags:
+    - shubao_restore 
+
+- stat: path={{apigateway.script_home}}/bin/tomcat_monitor.sh
+  register: p_shubao_restore
+  tags:
+    - shubao_restore     
+
+- name: restart shubao go
+  shell: sh shubao_monitor.sh restart
+  when:  p_shubao_go_restore.stat.isdir is defined and p_shubao_go_restore.stat.exists
+  ignore_errors: true   
+  args:
+    chdir: '/opt/{{common.user_apigateway}}/shubao/bin'
+    
+- name: restart shubao
+  shell: sh tomcat_monitor.sh restart
+  when:  p_shubao_restore is defined and p_shubao_restore.stat.exists
+  ignore_errors: true 
+  args:
+    chdir: '/opt/{{common.user_apigateway}}/shubao/bin'    
+    
+    
+- name: wait for start
+  wait_for: host="{{ ansible_ssh_host }}" port={{apigateway.https_port}}
+  tags:
+    - start
+
+- name: print msg
+  debug: msg="Restore shubao succ. Current date and time is {{ansible_date_time.date}} {{ansible_date_time.time}}"     

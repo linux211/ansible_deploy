@@ -1,0 +1,7 @@
+
+
+
+- name: config asgard
+  include: "oc_silvan.yml"
+  tags:
+    - config_silvan_oc

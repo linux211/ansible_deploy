@@ -1,0 +1,32 @@
+---
+- name: upload fixsecurity.sh
+  template: src=fixsecurity.sh  dest=/tmp/ mode='u+x,g+x,o+x' force=yes
+  tags: common-security
+  
+- name: security fix
+  shell: sh fixsecurity.sh
+  sudo: yes 
+  args:
+     chdir: '/tmp/'
+  tags: common-security
+
+- name: remove fixsecurity.sh
+  file: path=/tmp/fixsecurity.sh  state=absent    
+  tags: common-security
+
+- name: rm bash_history
+  shell: rm -rf ~/.bash_history
+
+- name: history -c
+  shell: history -c
+
+- name: delete sudo NOPASSWORD 
+  shell: sed -i "/{{common.user_apigateway}} ALL=NOPASSWD:ALL/d" {{common.etc_sudoer_path}}
+  sudo: yes  
+  
+- name: delete sudo NOPASSWORD 
+  shell: sed -i "/{{common.user_console}} ALL=NOPASSWD:ALL/d" {{common.etc_sudoer_path}}
+  sudo: yes
+  
+  
+

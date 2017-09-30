@@ -1,0 +1,84 @@
+ 
+- hosts: memcached
+  remote_user: '{{common.user_console}}'
+  gather_facts: False  
+  roles:
+    - memcached
+  tags:
+    - memcached_upgrade
+    
+- hosts: kafka
+  remote_user: '{{common.user_apigateway}}'
+  gather_facts: False
+  roles:
+    - kafka
+    
+- hosts: silvan
+  remote_user: '{{common.user_console}}'
+  gather_facts: False
+  roles:
+    - silvan
+  tags:
+    - silvan_upgrade
+
+- hosts: asgard
+  remote_user: '{{common.user_apigateway}}'
+  gather_facts: False
+  roles:
+    - asgard
+  tags:
+    - asgard_upgrade
+  
+- hosts: shubao
+  remote_user: '{{common.user_apigateway}}'
+  gather_facts: False  
+  serial: 2
+  roles:
+    - apigateway  
+    - tomcat
+
+- hosts: shubao
+  gather_facts: False
+  remote_user: '{{common.user_apigateway}}'
+  serial: 2
+  roles:
+    - shubao_go
+  tags: 
+    - shubao_upgrade 
+      
+- hosts: nginx
+  remote_user: '{{common.user_console}}'
+  gather_facts: False  
+  serial: 1
+  roles:
+    - nginx
+
+- hosts: common_apigateway
+  remote_user: '{{common.user_apigateway}}'
+  gather_facts: False  
+  roles:
+    - common
+    
+- hosts: common_onframework
+  remote_user: '{{common.user_console}}'
+  gather_facts: False  
+  roles:
+    - common
+
+- hosts: common_apigateway
+  remote_user: '{{common.user_apigateway}}'
+  gather_facts: False  
+  roles:
+    - common_clean
+    - health_check
+  tags: 
+    - upgrade_common_clean    
+    
+- hosts: common_onframework
+  remote_user: '{{common.user_console}}'
+  gather_facts: False  
+  roles:
+    - common_clean 
+    - health_check    
+  tags: 
+    - upgrade_common_clean     

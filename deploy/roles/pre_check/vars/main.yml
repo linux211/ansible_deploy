@@ -1,0 +1,33 @@
+#all vars need to check before install or update
+
+---
+required_vars:
+  - g_current_region.apicom.service
+  - g_current_region.as.api
+  - g_current_region.ces.api_apigateway
+  - g_current_region.ces.api_internal
+  - g_current_region.ces.api_rds
+  - g_current_region.dns.service
+  - g_current_region.elb.service
+  - g_current_region.evs.service
+  - g_current_region.fsp.cascading.api
+  - g_current_region.fsp.cascading.cinder
+  - g_current_region.fsp.cascading.glance
+  - g_current_region.fsp.cascading.neutron
+  - g_current_region.fsp.cascading.nova
+  - g_current_region.rds.service
+  - g_current_region.rts.heat.service
+  - g_current_region.smn.service
+  - g_current_region.task_center.service
+  - g_current_region.vbs.service
+  - g_current_region.vpc.service
+  - g_current_region.workspace.service
+  - g_iam.region_api.address
+  - g_iam.region_api.address.split(":")[0]
+  - g_iam.region_api.address.split(":")[1]
+  - g_regions[0].id
+  - g_regions[0].name
+  - g_current_region.apigateway.silvan_float_ip
+  - g_current_region.apigateway.asgard_ip
+  - g_oc.region_api_ip
+  - g_oc.server_port

@@ -1,0 +1,31 @@
+---
+
+- name: remove test script
+  file: path=/tmp/test_apigateway state=absent
+  ignore_errors: true
+  sudo: yes
+  
+- name: remove test script
+  file: path=/tmp/test_apigateway state=directory
+  ignore_errors: true
+  
+- name: copy script to /tmp/test_apigateway
+  copy: src={{item}} dest=/tmp/test_apigateway/{{ item | basename }} force=yes
+  with_fileglob:
+    - ./*
+    
+- name: template script to /tmp/test_apigateway
+  template: src=consts_apigateway.script dest=/tmp/test_apigateway/consts_apigateway.script force=yes
+  
+- name: dos2unix
+  shell: dos2unix  /tmp/test_apigateway/apigateway.sh
+    
+- name: execute test script
+  shell: sh apigateway.sh
+  args:
+    chdir: '/tmp/test_apigateway/'
+  register: result
+
+- name: print result
+  debug:
+    msg: "{{ result.stdout }}"

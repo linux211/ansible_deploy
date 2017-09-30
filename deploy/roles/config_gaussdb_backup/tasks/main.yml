@@ -1,0 +1,21 @@
+---
+
+- name: config LOCATION
+  lineinfile: dest={{gaussdb.backup_setting_file}} regexp='^LOCATION=' line='LOCATION={{common_iam.regionId}}'
+  sudo: yes
+ 
+- name: config back up mode
+  lineinfile: dest={{gaussdb.backup_setting_file}}  regexp='^UPLOAD_FTP_MODE=' line='UPLOAD_FTP_MODE={{data_backup.upload_mode}}'
+  sudo: yes  
+
+- name: add FTP file
+  include: addFTP.yml
+  when: 1 == {{data_backup.upload_mode}}
+  
+- name: add FTP file
+  include: config_ftp.yml
+  when: 1 == {{data_backup.upload_mode}}  
+ 
+- name: add FTP file
+  include: config_uds.yml
+  when: 0 == {{data_backup.upload_mode}} 

@@ -1,0 +1,9 @@
+
+- name: create user
+  include: create_user.yml
+  
+- name: modify hostname
+  include: hostname.yml
+  
+- name: modify semopm
+  include: modify_semopm.yml

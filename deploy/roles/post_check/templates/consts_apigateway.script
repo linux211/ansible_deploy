@@ -1,0 +1,7 @@
+##environment
+
+time=date()
+
+Content-Type=application/json
+
+apigatewayIP=https://{{ha_nginx_shubao.float_ip}}:{{nginx.sec_port}}

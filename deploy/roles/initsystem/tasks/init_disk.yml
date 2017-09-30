@@ -1,0 +1,27 @@
+--- 
+- name: upload createPartition.sh for partitioned
+  template: src=createPartition.sh dest=/tmp/ mode='u+x,g+x,o+x' force=yes
+  sudo: yes
+
+- name: init system partition
+  shell: sh /tmp/createPartition.sh  normal
+  async: 2000
+  poll: 15
+  sudo: yes
+    
+### check disk ###
+- name: check disk
+  include: ../../base_check/tasks/check_disk.yml 
+  
+- name: the available partition disk is not exist
+  ignore_errors: true
+  assert: 
+    that: 
+      - "{{opt_disk_volume.stdout | int}} > 20"
+      - "{{var_log_apigateway_disk_volume.stdout | int}} > 10"  
+    msg: "The /opt must be more than 20G,now is {{opt_disk_volume.stdout}}G.\n
+          The /var/log must be more than 10G,now is {{var_log_apigateway_disk_volume.stdout}}G."
+
+- name: remove createPartition script 
+  file: path=/tmp/createPartition.sh  state=absent  force=yes
+  sudo: yes

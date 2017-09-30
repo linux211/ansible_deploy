@@ -1,0 +1,70 @@
+---
+
+- name: add sudo no password permission
+  lineinfile: dest=/etc/sudoers regexp='^{{common.user_apigateway}} ALL=NOPASSWD:ALL' line='{{common.user_apigateway}} ALL=NOPASSWD:ALL'
+  sudo: yes
+  tags:
+    - apigateway_uninstall  
+
+- stat: path={{apigateway.script_home}}/bin/tomcat_monitor.sh
+  register: p
+  tags:
+    - apigateway_uninstall
+  
+- name: stop
+  shell: sh {{apigateway.script_home}}/bin/tomcat_monitor.sh stop
+  when:  p.stat.isdir is defined and p.stat.exists 
+  ignore_errors: true
+  tags:
+    - apigateway_uninstall
+
+- name: uninstall
+  shell: sh {{apigateway.script_home}}/install/uninstall_shubao.sh
+  when:  p.stat.isdir is defined and p.stat.exists
+  ignore_errors: true
+  tags:
+    - apigateway_uninstall
+
+- name: upload apigateway package
+  copy: src={{apigateway.pkg_dir}}/{{apigateway.pkg_name}} dest={{apigateway.home}} force=yes
+
+- name: untar apigateway
+  unarchive: src={{apigateway.home}}/{{apigateway.pkg_name}} dest={{apigateway.home}}  copy=no
+  
+- name: config shubao.conf
+  template: src=shubao.conf dest={{apigateway.script_home}}/install
+
+- name: install
+  shell: sh {{apigateway.script_home}}/install/install_shubao.sh
+  
+- name: config application
+  template: src=application.properties dest={{tomcat.new_secas_dir}}/webapps/apigateway/WEB-INF/classes/config/ force=yes
+
+- name: config log4j
+  template: src=log4j.properties dest={{tomcat.new_secas_dir}}/webapps/apigateway/WEB-INF/classes/config/ force=yes
+
+- name: config twoWaySsl
+  template: src=twoWaySsl.properties dest={{tomcat.new_secas_dir}}/webapps/apigateway/WEB-INF/classes/config/ force=yes
+    
+- name: rm apigateway package
+  shell: rm -rf {{apigateway.home}}/{{apigateway.pkg_name}}
+  
+- name: delete sudo NOPASSWORD 
+  shell: sed -i "/{{common.user_apigateway}} ALL=NOPASSWD:ALL/d" /etc/sudoers
+  sudo: yes
+  tags:
+    - apigateway_uninstall
+    
+## check backup file exit
+- stat: path=/opt/{{common.user_apigateway}}/{{shubao_go.backup_name}}
+  register: p_shubao_pkg
+  
+### restor the config file ###
+- name: restore the config file
+  include: ./restore_config.yml  
+  when:  p_shubao_pkg is defined and p_shubao_pkg.stat.exists
+  
+- name: restart
+  shell: sh {{apigateway.script_home}}/bin/tomcat_monitor.sh restart
+  tags:
+    - apigateway_restart

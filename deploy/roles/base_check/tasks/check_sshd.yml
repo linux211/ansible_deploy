@@ -1,0 +1,19 @@
+- name: get sshd result
+  shell: cat /etc/ssh/sshd_config | grep ^ListenAddress | awk '{print$2}'
+  register: sshd_result
+  sudo: yes
+
+- name: debug sshd
+  debug: msg="sshd result is {{sshd_result.stdout}}; Local IP conf is {{ansible_ssh_host}}"
+
+- name: remove sshd
+  shell: sed -i '/^ListenAddress/d' /etc/ssh/sshd_config
+  sudo: yes
+  when:
+    - "'{{ansible_ssh_host}}' not in '{{sshd_result.stdout}}'"
+
+- name: limit sshd
+  shell: echo "ListenAddress {{ansible_ssh_host}}" >> /etc/ssh/sshd_config && /etc/init.d/sshd restart
+  sudo: yes
+  when:
+    - "'{{ansible_ssh_host}}' not in '{{sshd_result.stdout}}'"  

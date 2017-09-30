@@ -1,0 +1,36 @@
+---
+
+- stat: path=/opt/{{common.user_console}}/ha
+  register: p 
+  sudo: yes 
+  tags:
+    - stop_ha 
+    
+- name: check the ha status
+  shell: source /etc/profile; QueryHaState |grep LOCAL_STATE |awk -F"=" '{print $2}'
+  when:  p.stat.isdir is defined and p.stat.isdir   
+  sudo: yes 
+  register: ha_status
+  tags:
+    - stop_ha    
+    
+- name: debug ha info
+  debug: msg="The ha info is {{ha_status.stdout}}"   
+  tags:
+    - stop_ha   
+  
+- name: stop ha crontab
+  shell: service cron stop
+  sudo: yes
+  when: (p.stat.isdir is defined and p.stat.isdir and '{{ha_status.stdout}}'!='active')  
+  tags:
+    - stop_ha   
+
+- name: stop the standby node
+  shell: sh stop_ha.sh
+  sudo: yes
+  args:
+    chdir: '{{ha_nginx.ha_script_bin_path}}' 
+  when: (p.stat.isdir is defined and p.stat.isdir and '{{ha_status.stdout}}'!='active')  
+  tags:
+    - stop_ha

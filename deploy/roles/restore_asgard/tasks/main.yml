@@ -1,0 +1,40 @@
+- stat: path=/opt/{{common.user_apigateway}}/{{asgard.backup_name}}
+  register: p_pkg
+
+- name: check backup file is exist
+  assert:
+    that:
+      - "p_pkg is defined and p_pkg.stat.exists"  
+      
+- stat: path=/opt/{{common.user_apigateway}}/asgard
+  register: p_asgard 
+  tags: 
+   - asgard-restore 
+   
+- name: stop asgard
+  shell: sh asgard_monitor.sh stop
+  when: p_asgard.stat.isdir is defined and p_asgard.stat.isdir
+  ignore_errors: true
+  args:
+    chdir: '/opt/{{common.user_apigateway}}/asgard/bin/' 
+  tags: 
+   - asgard-restore 
+  
+- name: remove asgard
+  file: path=/opt/{{common.user_apigateway}}/asgard  state=absent force=yes
+  tags: 
+   - asgard-restore  
+  sudo: yes  
+ 
+- name: untar asgard package
+  unarchive: src=/opt/{{common.user_apigateway}}/{{asgard.backup_name}} dest=/opt/{{common.user_apigateway}}  copy=no 
+  tags: 
+   - asgard-restore   
+   
+- name: asgard start
+  shell: sh asgard_monitor.sh restart   
+  args:
+    chdir: '/opt/{{common.user_apigateway}}/asgard/bin/'
+    
+- name: print msg
+  debug: msg="Restore asgard succ. Current date and time is {{ansible_date_time.date}} {{ansible_date_time.time}}"       

@@ -1,0 +1,46 @@
+- stat: path={{common.home_dir}}/{{silvan.backup_name}}
+  register: p_pkg
+
+- name: check backup file is exist
+  assert:
+    that:
+      - "p_pkg is defined and p_pkg.stat.exists"  
+
+- stat: path=/opt/{{common.user_console}}/silvan
+  register: p_silvan
+  tags: 
+   - silvan-restore
+
+- name: stop silvan
+  shell: sh stop_silvan.sh
+  when: p_silvan.stat.isdir is defined and p_silvan.stat.isdir
+  args:
+    chdir: '{{silvan.bin_dir}}'
+  tags: 
+   - silvan-restore
+   
+- name: rm silvan
+  file: path={{common.home_dir}}/silvan  state=absent force=yes
+  sudo: yes
+  tags: 
+   - silvan-restore   
+  
+- name: unzip silvan package
+  unarchive: src={{common.home_dir}}/{{silvan.backup_name}} dest={{common.home_dir}}  copy=no 
+  tags: 
+   - silvan-restore
+
+- name: start silvan
+  shell: sh silvan_monitor.sh restart
+  args:
+    chdir: '{{silvan.bin_dir}}'
+  tags: 
+   - silvan-restore
+
+- name: wait for start
+  wait_for: host="{{ ansible_ssh_host }}" port={{silvan.sec_port}}
+  tags:
+    - start
+
+- name: print msg
+  debug: msg="Restore silvan succ. Current date and time is {{ansible_date_time.date}} {{ansible_date_time.time}}"   

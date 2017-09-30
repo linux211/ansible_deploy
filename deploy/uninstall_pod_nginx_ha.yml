@@ -1,0 +1,5 @@
+
+- hosts: shubao_pod_nginx
+  remote_user: '{{common.user_console}}'
+  roles:
+    - ha_nginx 

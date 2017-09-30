@@ -1,0 +1,18 @@
+
+- name: make nginx log dir
+  file: path=/var/log/nginx force=true state=directory  
+  sudo: yes
+ 
+- name: move the nginx logs file
+  shell: mv /opt/onframework/nginx/logs/*  /var/log/nginx
+  ignore_errors: true
+  sudo: yes
+
+- name: remove the log file 
+  file: path=/opt/onframework/nginx/logs  state=absent force=true
+  sudo: yes   
+   
+- name: make soft link 
+  shell: ln -s /var/log/nginx /opt/onframework/nginx/logs;
+  ignore_errors: true
+  sudo: yes

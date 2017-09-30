@@ -1,0 +1,6 @@
+
+- hosts: '{{ target_hosts }}'
+  remote_user: '{{common.root_user}}'
+  gather_facts: False
+  roles:
+    - initsysuser

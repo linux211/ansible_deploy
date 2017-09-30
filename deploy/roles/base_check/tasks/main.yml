@@ -1,0 +1,100 @@
+---
+
+### check hardware (CPU DNS) ###
+- name: check hardware
+  include: ./check_hardware.yml 
+
+### check disk ###
+- name: check disk
+  include: ./check_disk.yml 
+  
+### check HOSTNAME ###
+- name: check hostname
+  include: ./check_hostname.yml   
+  
+### check file_limit ###
+- name: check file limit
+  include: ./check_file_limit.yml   
+
+### check sshd ###
+- name: check sshd
+  include: ./check_sshd.yml 
+  
+### check ntp ###
+- name: check ntp
+  include: ./check_ntp.yml 
+  
+### check dns ###
+- name: check dns
+  include: ./check_dns.yml   
+ 
+### check timezone config
+- name: check timezone
+  include: ./check_time_zone.yml  
+  
+### get final result
+- name: get ulimit result
+  shell: ulimit -n
+  register: ulimit_result
+  sudo: yes
+
+- name: get ntpq -p result
+  shell: ntpq -p | awk '{print $1}'| awk 'NR>2 {print}'
+  register: ntp_status_final_result
+  sudo: yes
+  
+- name: debug ntp status
+  debug: msg="ntp status result is {{ntp_status_final_result.stdout}}; Global ntp conf is {{g_ntp.ip}}"  
+  
+- name: get DNS conf
+  shell: cat /etc/resolv.conf | grep nameserver | awk '{print $2}'
+  register: dns_final_result
+
+- name: get nscd conf
+  shell: cat /etc/nscd.conf | grep 'enable-cache' | grep 'hosts' | awk '{print $3}'
+  register: nscd_final_result
+
+- name: get chkconfig ntp result
+  shell: chkconfig ntp || chkconfig ntpd
+  register: chkconfig_ntp_result
+  sudo: yes
+
+- name: check DNS and nscd result
+  with_items: '{{g_dns.ip}}'
+  assert:
+    that:
+      - "'{{item}}' in '{{dns_final_result.stdout}}'"
+      - " '{{nscd_final_result.stdout}}' == 'yes'"
+
+- name: check ntp chkconfig, ntp ip
+  with_items:
+    - '{{g_ntp.ip}}'
+  assert:
+    that:
+      - "'on' or 'enabled' in '{{chkconfig_ntp_result.stdout}}'"
+      - "'{{ntp_status_final_result.stdout}}'!=''" 
+      - "'LOCAL' not in '{{ntp_status_final_result.stdout}}'"
+ 
+- name: debug cpu memory and disk result
+  debug: msg="cpu cores is {{cpu_result.stdout}}; memory is {{mem_result.stdout}} G; /opt volume is {{opt_disk_volume.stdout}}G; /opt volume Use% is {{opt_disk_volume_use.stdout}} %; /var/log volume is {{var_log_apigateway_disk_volume.stdout}}G; /var/log/ volume Use% is {{var_log_apigateway_disk_volume_use.stdout}} %."
+
+- name: check timezone result
+  debug: msg="timezone result is {{timezone_result.stdout}}"
+
+- name: the summary result
+  assert:
+    that:
+      - "{{cpu_result.stdout | int}} >=4"
+      - "{{mem_result.stdout | int}} >= 3"
+      - "{{opt_disk_volume.stdout | int}} > 30"
+      - "{{opt_disk_volume_use.stdout | int}} < 90"
+      - "{{var_log_apigateway_disk_volume.stdout | int}} > 20" 
+      - "{{var_log_apigateway_disk_volume_use.stdout | int}} < 90"
+      - "'65535' in '{{ulimit_result.stdout}}'"
+    msg: "The cpu core must be more than 3,now is {{cpu_result.stdout}}\n
+    The mem must be more than 3,now is {{mem_result.stdout}}\n
+    The /opt must be more than 30G,now is {{opt_disk_volume.stdout}}G\n
+    The /opt used must be less than 90%,now is {{opt_disk_volume_use.stdout}}%\n 
+    The /var/log must be more than 20G,now is {{var_log_apigateway_disk_volume.stdout}}G\n
+    The /var/log used must be less than 90%,now is {{var_log_apigateway_disk_volume_use.stdout}}%\n  
+    The ulimit must 65535,now is {{ulimit_result.stdout}}"  

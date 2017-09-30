@@ -1,0 +1,21 @@
+- name: get ip address 
+  template: src=get_ip_addr.sh dest=/tmp/ 
+  when: "'{{IS_STANDBY|default()}}'=='N'"
+  tags:
+    - get_zk_ip_addrs   
+    
+- name: get ip address   
+  shell: sh /tmp/get_ip_addr.sh
+  when: "'{{IS_STANDBY|default()}}'=='N'"
+  sudo: yes 
+  tags:
+    - get_zk_ip_addrs 
+
+- fetch:
+    src: /tmp/ip_addr_mask
+    dest: group_vars/all/ip_addr_mask
+    flat: yes
+  when: "'{{IS_STANDBY|default()}}'=='N'"  
+  sudo: yes 
+  tags:
+    - get_zk_ip_addrs

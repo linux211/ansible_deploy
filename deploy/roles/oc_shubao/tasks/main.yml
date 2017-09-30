@@ -1,0 +1,6 @@
+
+
+- name: config shubao
+  include: "oc_shubao.yml"
+  tags:
+    - config_shubao_oc

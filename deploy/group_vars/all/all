@@ -1,0 +1,40 @@
+---
+
+gaussdb_float_ip: x.x.x.x    
+    
+silvan_lb_float_ip: x.x.x.x
+
+shubao_lb_float_ip: x.x.x.x
+
+pod_shubao_lb_float_ip: x.x.x.x
+
+#pod lb tenent address gateway eg:"100.125.0.1"
+pod_lb_gw: 100.125.0.1
+
+#external relay network segment eg:"100.64.0.0" 
+pod_lb_target_segment: 100.64.0.0
+
+#external relay network netmask eg:"255.192.0.0" 
+pod_lb_target_netmask: 255.192.0.0 
+
+# username & password & salt for oc alarm, please refer to apigateway install & upgrade document
+oc_username: apigw_oc_admin
+
+oc_password: DO0//ZqGEhvbDxYbNgaizg==
+
+oc_salt: B0489A259407FF6C176DB438B85387E4
+
+oc_key: 02eea1b632f6d51fa3bd32f7adb6391ce729f0bbd810a427f99fbfb51dfd5bfa
+
+data_backup:
+  upload_mode: 1   #0 means uds;1 means ftp
+  uds:
+    ak: NEED_CHANGE
+    sk1: NEED_CHANGE
+    sk2: NEED_CHANGE
+  ftp:
+    server_passwd: NEED_CHANGE
+    server_filepath: /Quota_IaaS/APIGWDB
+
+# format is jdk8u121,jre8u131
+jdk_version: jre8u131

@@ -1,0 +1,23 @@
+---
+
+- stat: path=/opt/{{common.user_apigateway}}/{{shubao_go.backup_name}}
+  register: p_shubao_pkg
+  
+- name: backup action
+  include: ./backup.yml
+  when: (p_shubao_pkg is defined and p_shubao_pkg.stat.exists == false)
+ 
+- name: fetch the modify date
+  shell: stat {{shubao_go.backup_name}}|awk -F'[ .]' '/Modify/{print $2" "$3}'
+  args:
+    chdir: 
+        '/opt/{{common.user_apigateway}}'  
+  register: p_date 
+
+- name: print the result msg
+  debug: msg="Backup shubao succ. the file create time is {{p_date.stdout}}"
+  when: (p_shubao_pkg is defined and p_shubao_pkg.stat.exists == false)   
+  
+- name: print the result msg
+  debug: msg="The shubao backup package is already exist, the file create time is {{p_date.stdout}}"
+  when: (p_shubao_pkg is defined and p_shubao_pkg.stat.exists)

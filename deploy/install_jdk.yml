@@ -1,0 +1,72 @@
+- hosts: memcached
+  remote_user: '{{common.user_console}}'
+  gather_facts: False   
+  roles:
+    - jdk
+    - health_check    
+  tags:
+    - jdk_upgrade
+    
+- hosts: silvan
+  gather_facts: False 
+  serial: 1
+  remote_user: '{{common.user_console}}'
+  roles:
+    - jdk
+    - silvan
+    - health_check    
+  tags:
+    - jdk_upgrade    
+    
+- hosts: asgard
+  gather_facts: False    
+  remote_user: '{{common.user_apigateway}}'
+  roles:
+    - jdk
+    - asgard
+    - health_check
+  tags:
+    - jdk_upgrade
+   
+- hosts: kafka
+  remote_user: '{{common.user_apigateway}}'
+  serial: 1  
+  gather_facts: False 
+  roles:
+    - jdk
+    - zookeeper
+    - kafka
+    - health_check    
+  tags:
+    - jdk_upgrade
+ 
+- hosts: cassandra
+  gather_facts: False 
+  serial: 1
+  remote_user: '{{common.user_apigateway}}'
+  roles:
+    - jdk
+    - cassandra
+    - health_check    
+  tags:
+    - jdk_upgrade    
+    
+- hosts: shubao
+  gather_facts: False 
+  serial: 1
+  remote_user: '{{common.user_apigateway}}'
+  roles:
+    - jdk
+    - health_check    
+  tags:
+    - jdk_upgrade
+    
+- hosts: nginx
+  remote_user: '{{common.user_console}}'
+  gather_facts: False   
+  serial: 1
+  roles:
+    - jdk
+    - nginx
+  tags:
+    - jdk_upgrade    

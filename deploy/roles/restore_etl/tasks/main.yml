@@ -1,0 +1,50 @@
+- stat: path=/opt/{{common.user_apigateway}}/{{etl.backup_name}}
+  register: p_pkg
+
+- name: check backup file is exist
+  assert:
+    that:
+      - "p_pkg is defined and p_pkg.stat.exists"  
+
+- stat: path={{etl.home}}/bin/etl_monitor.sh
+  register: p_etl
+  tags:
+    - etl_restore
+  
+- name: stop etl
+  shell: sh etl_monitor.sh stop
+  when:  p_etl.stat.isdir is defined and p_etl.stat.exists
+  args:
+    chdir: '/opt/{{common.user_apigateway}}/etl/bin/'
+  ignore_errors: true
+  tags:
+    - etl_restore
+    
+- name: remove etl 
+  file: path=/opt/{{common.user_apigateway}}/etl  state=absent  force=yes
+  sudo: yes
+  tags:
+    - etl_restore
+      
+- name: unzip etl
+  shell: tar zxvf {{etl.backup_name}}
+  args:
+    chdir: '/opt/{{common.user_apigateway}}/'
+  tags: 
+   - etl_restore
+   
+- stat: path={{etl.home}}/bin/etl_monitor.sh
+  register: p_etl_restore
+  tags:
+    - etl_restore 
+
+
+- name: restart etl go
+  shell: sh etl_monitor.sh restart
+  when:  p_etl_restore.stat.isdir is defined and p_etl_restore.stat.exists
+  ignore_errors: true   
+  args:
+    chdir: '/opt/{{common.user_apigateway}}/etl/bin'
+
+- name: print msg
+  debug: msg="Restore etl succ. Current date and time is {{ansible_date_time.date}} {{ansible_date_time.time}}"     

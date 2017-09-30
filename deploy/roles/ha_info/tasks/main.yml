@@ -1,0 +1,14 @@
+---
+
+- name: upload script to get the info
+  template: src=getInfo.sh dest=/tmp/
+
+- name:  get info 
+  shell: sh /tmp/getInfo.sh {{float_ip}} {{IS_PRIMARY}} {{flag_type_pod}}
+  sudo: yes
+
+- fetch:
+    src: /tmp/{{IS_PRIMARY}}
+    dest: group_vars/all/{{IS_PRIMARY}}
+    flat: yes
+  sudo: yes

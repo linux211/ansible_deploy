@@ -1,0 +1,18 @@
+
+- name: config oc address
+  lineinfile: dest={{asgard.config_file}} regexp='^app.oc.ip=' line='app.oc.ip={{g_oc.region_api_ip}}'
+ 
+- name: config oc port
+  lineinfile: dest={{asgard.config_file}}  regexp='^app.oc.port=' line='app.oc.port={{g_oc.server_port}}'
+  
+- name: config oc username
+  lineinfile: dest={{asgard.config_file}}  regexp='^app.oc.username=' line='app.oc.username={{oc_username}}'
+  
+- name: config oc password
+  lineinfile: dest={{asgard.config_file}} regexp='^app.oc.password=' line='app.oc.password={{oc_password}}'
+  
+- name: config oc salt
+  lineinfile: dest={{asgard.config_file}} regexp='^app.oc.password.salt=' line='app.oc.password.salt={{oc_salt}}'
+  
+- name: config client ip
+  lineinfile: dest={{asgard.config_file}} regexp='^app.oc.client.host.ip=' line='app.oc.client.host.ip={{ansible_ssh_host}}'

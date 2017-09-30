@@ -1,0 +1,5 @@
+import consts_apigateway.script
+
+[L0 getToken]
+apigateway_get_version.fitc
+

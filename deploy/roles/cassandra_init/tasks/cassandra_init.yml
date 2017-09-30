@@ -1,0 +1,12 @@
+---
+
+- name:  creat database file
+  shell: sh initCassandraDB.sh
+  register: initCass
+  failed_when: "initCass.rc != 0"
+  args:
+    chdir: 
+        '{{cassandra.path}}/install/'   
+
+- name: print msg
+  debug: msg="Create cassandra table succ"

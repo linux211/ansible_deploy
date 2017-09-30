@@ -1,0 +1,29 @@
+
+---
+- stat: path=/opt/{{common.user_console}}/{{silvan.backup_name}}
+  register: p_silvan_pkg
+
+- name: backup silvan 
+  shell: tar zcvf {{silvan.backup_name}} silvan --ignore-failed-read --warning=no-file-changed
+  when: (p_silvan_pkg is defined and p_silvan_pkg.stat.exists) == false  
+  args:
+    chdir: '{{common.home_dir}}'
+  ignore_errors: true  
+  tags: 
+   - silvan_backup
+
+- name: fetch the modify date
+  shell: stat {{silvan.backup_name}}|awk -F'[ .]' '/Modify/{print $2" "$3}'
+  args:
+    chdir: 
+        '{{common.home_dir}}'
+  register: p_date 
+    
+- name: print success msg
+  debug: msg="Backup silvan succ. the file create time is {{p_date.stdout}}"
+  when: (p_silvan_pkg is defined and p_silvan_pkg.stat.exists) == false
+  
+- name: print the result msg
+  debug: msg="The silvan backup package is already exist, the file create time is {{p_date.stdout}}"
+  when: p_silvan_pkg is defined and p_silvan_pkg.stat.exists  
+
