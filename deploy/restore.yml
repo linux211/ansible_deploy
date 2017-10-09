@@ -1,44 +1,31 @@
-     
-- hosts: nginx
-  remote_user: '{{common.user_console}}'
+
+- hosts: [shubao_nginx,shubao_pod_nginx,silvan_nginx]
   serial: 1
   roles:
     - restore_nginx
   tags:
-    - restore_nginx    
-  
+    - restore_nginx
+
 - hosts: silvan
-  remote_user: '{{common.user_console}}'
   serial: 1
   roles:
     - restore_silvan
     - health_check     
   tags:
-    - restore_silvan    
+    - restore_silvan
 
 - hosts: asgard
-  remote_user: '{{common.user_apigateway}}'
   serial: 1
   roles:
     - restore_asgard
-    - health_check     
+    - health_check
   tags:
     - restore_asgard
 
-- hosts: shubao
-  remote_user: '{{common.user_apigateway}}'
+- hosts: [shubao_public,shubao_pod,shubao_tsz]
   serial: 1
   roles:
-    - restore_etl
-    - health_check     
-  tags:
-    - restore_etl  
-    
-- hosts: shubao
-  remote_user: '{{common.user_apigateway}}'
-  serial: 1
-  roles:
-    - restore_shubao  
-    - health_check     
+    - restore_shubao
+    - health_check
   tags:
     - restore_shubao

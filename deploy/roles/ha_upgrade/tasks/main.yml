@@ -1,0 +1,66 @@
+---
+
+- stat: path=/opt/{{common.user_console}}/ha
+  register: p
+  sudo: yes
+
+- name: check the ha status
+  shell: /opt/{{common.user_console}}/ha/bin/QueryHaState| awk -F= '$1=="LOCAL_STATE"{print $2}'
+  sudo: yes
+  register: ha_status
+
+- name: debug ha info before upgrade ha component
+  debug: msg="The ha info is {{ha_status.stdout}}"
+  when: ha_status.stdout is defined and ha_status.stdout
+
+- name: get ha info
+  include: "{{inventory_dir}}/roles/ha/tasks/get_ha_info.yml"
+
+- name: install component of ha
+  include: "{{inventory_dir}}/roles/ha/tasks/install_ha.yml"
+  when: ha_status.stdout is defined and '{{ha_status.stdout}}' != 'active'
+
+- name: check the ha status
+  shell: /opt/{{common.user_console}}/ha/bin/QueryHaState| awk -F= '$1=="LOCAL_STATE"{print $2}'
+  sudo: yes
+  register: ha_status
+  tags:
+    - switch_standby
+
+- name: Switch state to standby
+  shell: "/opt/{{common.user_console}}/ha/bin/switchover"
+  when: ha_status.stdout is defined and ha_status.stdout and '{{ha_status.stdout}}' == 'active'
+  sudo: yes
+  tags:
+    - switch_standby
+
+- name: wait for the ha state to be standby for standby node
+  action: shell /opt/{{common.user_console}}/ha/bin/QueryHaState
+  register: result
+  until: result.stdout.find("LOCAL_STATE=standby") != -1
+  when: ha_status.stdout is defined and ha_status.stdout and '{{ha_status.stdout}}' == 'active'
+  retries: 20
+  delay: 5
+  sudo: yes
+  tags:
+    - switch_standby
+
+- name: wait for the ha state to be active for primary node
+  action: shell /opt/{{common.user_console}}/ha/bin/QueryHaState
+  register: result
+  until: result.stdout.find("LOCAL_STATE=active") != -1
+  when: ha_status.stdout is defined and ha_status.stdout and '{{ha_status.stdout}}' != 'active'
+  retries: 20
+  delay: 5
+  sudo: yes
+  tags:
+    - switch_standby
+
+- name: check the ha status
+  shell: /opt/{{common.user_console}}/ha/bin/QueryHaState| awk -F= '$1=="LOCAL_STATE"{print $2}'
+  sudo: yes
+  register: ha_status
+
+- name: debug ha info after upgrade ha component
+  debug: msg="The ha info is {{ha_status.stdout}}"
+  when: ha_status.stdout is defined and ha_status.stdout

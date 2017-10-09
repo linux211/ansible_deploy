@@ -1,16 +1,16 @@
 ---
 - name: add onframework sudo no password
-  lineinfile: dest=/etc/sudoers regexp='^onframework ALL=NOPASSWD:ALL' line='onframework ALL=NOPASSWD:ALL' 
+  lineinfile: dest=/etc/sudoers regexp='^onframework ALL=NOPASSWD:ALL' line='onframework ALL=NOPASSWD:ALL'
   sudo: yes
   tags:
     - nginx_uninstall
-  
+
 - stat: path={{nginx.bin_dir}}
   register: p
-  sudo: yes  
+  sudo: yes
   tags:
     - nginx_uninstall
-    
+
 # 停止nginx
 - name: stop
   when:  p.stat.isdir is defined and p.stat.isdir
@@ -21,42 +21,42 @@
   sudo: yes
   tags:
     - nginx_uninstall
-    
+
 - name: get os type
   shell: egrep -o 'EulerOS|SUSE' /proc/version
-  sudo: yes 
-  register: os_type  
+  sudo: yes
+  register: os_type
   tags:
-    - nginx_uninstall    
+    - nginx_uninstall
 
 # 适配欧拉系统包
 - name:  get the list of package
   when:  ("{{os_type.stdout}}" == "EulerOS")
   local_action: "shell ls -l roles/nginx/files/packages|grep ^-|awk {'print $9'}"
   register:  template_packages
-   
+
 - name: upload package to /usr/lib64/
   when:  ("{{os_type.stdout}}" == "EulerOS")
   sudo: yes
   copy: src=roles/nginx/files/packages/{{item}} dest=/usr/lib64/
   with_items:
   - "{{template_packages.stdout.splitlines()}}"
-  
+
 - name: upload package file to /usr/lib/
   when:  ("{{os_type.stdout}}" == "EulerOS")
   sudo: yes
   copy: src=roles/nginx/files/packages/{{item}} dest=/usr/lib/
   with_items:
-  - "{{template_packages.stdout.splitlines()}}"  
+  - "{{template_packages.stdout.splitlines()}}"
 
 # backup ssl file
 - name: if nginx is exist backup cacert
   when:  p.stat.isdir is defined and p.stat.isdir
   shell: chmod 750 {{nginx.ssl_dir}} -R; rm -r /tmp/SSL ;  cp -r {{nginx.ssl_dir}}  /tmp ;
-  sudo: yes  
+  sudo: yes
   ignore_errors: true
   tags:
-    - back_ssl_file    
+    - back_ssl_file
 
 # 删除nginx目录
 - name: uninstall nginx
@@ -68,58 +68,58 @@
     - nginx_uninstall
 
 # 拷贝nginx安装包
-- name: upload nginx package 
+- name: upload nginx package
   copy: src={{nginx.pkg_dir}}/{{nginx.pkg_name}} dest={{common.home_dir}} force=yes
   sudo: yes
-  
+
 # 解压nginx压缩包
 - name: untar
   unarchive: src={{common.home_dir}}/{{nginx.pkg_name}} dest={{nginx.untar_dir}} copy=no
   sudo: yes
-  
+
 #安装脚本dos2unix转换
 - name: dos2unix install script
   shell: dos2unix {{nginx.install_dir}}/install/*.sh
   sudo: yes
-  
+
 #安装nginx
 - name: install nginx
   sudo: yes
   shell: sh {{nginx.install_dir}}/install/install_nginx.sh
-  
+
 - shell:  grep ^processor /proc/cpuinfo | wc -l
   register: system_processor_num
   tags:
-    - nginx_update  
+    - nginx_update
   sudo: yes
-  
+
 - name: set the upstream address
   debug: msg="The upstream address is {{nlbips}}"
   tags:
     - nginx_update
-  
+
 # 修改nginx配置文件
 - name: update pod config
   when: "'{{flag_type_pod}}'== 'Y'"
   template: src=roles/nginx/templates/pod/nginx.conf dest={{nginx.conf_dir}}
   sudo: yes
   tags:
-    - nginx_update 
-    
+    - nginx_update
+
 # 修改nginx配置文件
 - name: update region config
   when: "'{{flag_type_pod}}'== 'N'"
   template: src=roles/nginx/templates/region/nginx.conf dest={{nginx.conf_dir}}
   sudo: yes
   tags:
-    - nginx_update  
+    - nginx_update
 
 - name: upload uuid package
-  copy: src=uuid.lua   dest={{nginx.lua_package_dir}}  
+  copy: src=uuid.lua   dest={{nginx.lua_package_dir}}
   sudo: yes
   tags:
-    - nginx_update 
-  
+    - nginx_update
+
 #上传证书
 - name: upload server.crt
   copy: src={{nginx.nginx_certificate}} dest={{nginx.ssl_dir}}
@@ -128,57 +128,57 @@
 - name: upload server.key
   copy: src={{nginx.nginx_key}} dest={{nginx.ssl_dir}}
   sudo: yes
-  
+
 - name: upload key_pass
   copy: src={{nginx.nginx_key_pass}} dest={{nginx.ssl_dir}}
   sudo: yes
-   
+
 - name: upload dhparam.pem file
   copy: src=dhparam.pem   dest={{nginx.ssl_dir}}
   sudo: yes
-  
+
   ### upload the ssl cert ###
 - name: upload the ssl cert file
   include: ./upload_cert.yml
-  
+
 #check /var/log/nginx is already exist
 - stat: path=/var/log/nginx
   register: log_nginx
-  sudo: yes  
+  sudo: yes
   tags:
-    - nginx_update 
+    - nginx_update
 
 - name: update the log path
   when: (log_nginx.stat.isdir is not defined or log_nginx.stat.isdir == false)
-  include: ./nginx_log_modify.yml  
-  sudo: yes 
+  include: ./nginx_log_modify.yml
+  sudo: yes
   tags:
-    - nginx_update  
-  
+    - nginx_update
+
 #执行脚本dos2unix转换
 - name: dos2unix install script
   shell: dos2unix {{nginx.bin_dir}}/*.sh
   sudo: yes
-  
+
 - name: dos2unix tools script
   shell: dos2unix {{nginx.tools_dir}}/*.sh
   sudo: yes
-  
-- name: modify nginx permission  
+
+- name: modify nginx permission
   shell: chown root:root {{nginx.install_dir}} -R
-  sudo: yes 
+  sudo: yes
   tags:
-    - nginx_update   
-  
+    - nginx_update
+
 - name: rm nginx package
   shell: rm -rf /opt/{{common.user_console}}/{{nginx.pkg_name}}
   sudo: yes
-  
-- name: delete sudo NOPASSWORD 
+
+- name: delete sudo NOPASSWORD
   shell: sed -i "/{{common.user_console}} ALL=NOPASSWD:ALL/d" {{common.etc_sudoer_path}}
   sudo: yes
   tags:
-    - nginx_uninstall  
+    - nginx_uninstall
 
 #启动nginx
 - name: start

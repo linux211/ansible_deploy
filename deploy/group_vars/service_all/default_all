@@ -14,6 +14,8 @@ initial_database: 'true'
 
 initial_table: 'true'
 
+omm_agent_version: '{{ g_current_region.service_om.agent_version }}'
+
 elk:
   path: /opt/logstash/logstash-2.4.0
   elk_agent: logstash
@@ -46,10 +48,10 @@ common:
   apigateway_log: /var/log/apigateway
   console_log: /var/log/console
   zabbix_home: /home/zabbix
-  etc_sudoer_path: /etc/sudoers   
+  etc_sudoer_path: /etc/sudoers
   etc_profile_path: /etc/profile
   tomcat_thread_num_file: /tmp/tomcat_thread_num.log
-  
+
 nginx_list: '{% for host in groups["nginx"] %}{{ hostvars[host]["ansible_ssh_host"] }}{% if not loop.last %}|{% endif %}{% endfor %}'
 
 shubao_list: '{% for host in groups["shubao"] %}{{ hostvars[host]["ansible_ssh_host"] }}{% if not loop.last %}|{% endif %}{% endfor %}'
@@ -65,30 +67,29 @@ jdk_version_array: '{{java_version.split("u")}}'
 
 jdk_version_start: '{{jdk_version_array[0]}}'
 
-jdk_version_end: '{{jdk_version_array[1]}}'  
+jdk_version_end: '{{jdk_version_array[1]}}'
 
 jdk:
-  pkg_dir: '/pkg_repo/3rd/CommonService/{{java_tag}}/{{java_version}}'
+  pkg_dir: /pkg_repo/3rd/CommonService/{{java_tag}}/{{java_version}}
   pkg_name: '{{java_tag}}-{{java_version}}-security-linux-x64.tar.gz'
-  
+
 jdk_versions:
   - jdk18066
   - jdk18071
-  - jdk18072 
+  - jdk18072
   - jdk180101
   - jdk180121
-  - jre180131  
-  
+  - jre180131
+
 location: '{{config_file_folder}}'
 
 apigateway_pkg_dir: /pkg_repo/service/ApiGateway/{{apigateway_version}}
 
-apigateway_version: 3.0.3
+apigateway_version: 3.0.5
 
 recent_versions:
- - 3.0.2
- - 3.0.1
- - 3.0.0
+ - 3.0.4
+ - 3.0.3
 
 module_version:
   silvan_version: '{{apigateway_version}}'
@@ -100,17 +101,17 @@ module_version:
   opsmonitor_version: '{{apigateway_version}}'
   kafka_version: '{{apigateway_version}}'
   zookeeper_version: '{{apigateway_version}}'
-  asgard_version: '{{apigateway_version}}'  
-  throttle_version: '{{apigateway_version}}'   
-  cassandra_version: '{{apigateway_version}}'   
-  
-arb_port: '{{ARB_PORT|default()}}'
-arb_ips: '{{ARB_IP.split(",")}}'
-arb_hostsstr: '{% for ips in arb_ips %}{{ips}}:{{arb_port}}{% if not loop.last %},{% endif %}{% endfor %}'
-arb_hosts: '{{arb_hostsstr.split(",")}}'  
+  asgard_version: '{{apigateway_version}}'
+  throttle_version: '{{apigateway_version}}'
+  cassandra_version: '{{apigateway_version}}'
+
+arb_port_default: '{{arb_port|default()}}'
+arb_ips: '{{arb_ip.split(",")}}'
+arb_hostsstr: '{% for ips in arb_ips %}{{ips}}:{{arb_port_default}}{% if not loop.last %},{% endif %}{% endfor %}'
+arb_hosts: '{{arb_hostsstr.split(",")}}'
 
 
-silvan_uri: 'https://{{silvan_lb_float_ip}}:443'  
+silvan_uri: 'https://{{silvan_lb_float_ip}}:443'
 throttle_tool:
   pkg_dir: '{{apigateway_pkg_dir}}'
   pkg_name: ApiMgrTool-{{module_version.throttle_version}}-release.tar.gz
@@ -118,7 +119,7 @@ throttle_tool:
   silvan_user_uri: '{{silvan_uri}}/apithrottle'
   environment: '{{config_file_folder}}'
 
-ha_nginx: 
+ha_nginx:
   pkg_dir: '{{apigateway_pkg_dir}}'
   pkg_name: ha-package-{{module_version.ha_version}}-release.tar.gz
   untar_dir: '{{common.home_dir}}'
@@ -128,6 +129,8 @@ ha_nginx:
   ha_conf_dir: '{{common.home_dir}}/nginx/conf'
   ha_resource_conf_path: '{{common.home_dir}}/ha/module/harm/plugin/conf'
   ha_script_bin_path: '{{common.home_dir}}/ha/module/hacom/script'
+  ha_config_arb_path: '{{common.home_dir}}/ha/conf/arb'
+  
 
 nginx:
   sec_port: 443
@@ -139,8 +142,8 @@ nginx:
   bin_dir: '{{common.home_dir}}/nginx/bin'
   tools_dir: '{{common.home_dir}}/nginx/tools'
   ssl_dir: '{{common.home_dir}}/nginx/conf/SSL'
-  nginx_certificate: server.crt 
-  nginx_key: server.key 
+  nginx_certificate: server.crt
+  nginx_key: server.key
   nginx_key_pass: key_pass
   nginx_conf_version: v2
   nginx_local_cpu: 4
@@ -166,22 +169,22 @@ silvan:
   certificate_dir: '{{common.home_dir}}/silvan/config'
   backup_name: '{{apigateway_version}}_silvan_backup.tar.gz'
   config_file: /opt/onframework/silvan/config/application.properties
-  
+
 cassandra_ipstr: '{% for host in groups["cassandra"] %}{{ hostvars[host]["ansible_ssh_host"] }}{% if not loop.last %},{% endif %}{% endfor %}'
 cassandra_ips: '{{cassandra_ipstr.split(",")}}'
-is_support_api_monitor: '{{"true" if cassandra_ips|length > 1 else "false" }}'  
- 
+is_support_api_monitor: '{{"true" if cassandra_ips|length > 1 and (zone=="public" or zone=="pod") else "false" }}'
+
 cassandra:
   pkg_dir: '{{apigateway_pkg_dir}}'
   pkg_name: cassandra-{{module_version.cassandra_version}}-release.tar.gz
   home: '/opt/{{common.user_apigateway}}'
-  path: '/opt/{{common.user_apigateway}}/cassandra'  
+  path: '/opt/{{common.user_apigateway}}/cassandra'
   install_dir: '/opt/{{common.user_apigateway}}/cassandra'
   bin_dir: '/opt/{{common.user_apigateway}}/cassandra/bin'
   install_config_file: '/opt/{{common.user_apigateway}}/cassandra/install/cassandra.cfg'
   install_script_file: '/opt/{{common.user_apigateway}}/cassandra/install/cassandra_install.sh'
   hosts: '{{cassandra_ips}}'
- 
+
 memcached_ipstr: '{% for host in groups["memcached"] %}{{ hostvars[host]["ansible_ssh_host"] }}{% if not loop.last %},{% endif %}{% endfor %}'
 memcached_ips: '{{memcached_ipstr.split(",")}}'
 memcached_hostsstr: '{% for ips in memcached_ips %}{{ips}}:{{common.memcache_port}}{% if not loop.last %},{% endif %}{% endfor %}'
@@ -216,12 +219,12 @@ kafka_ips: '{{kafka_ipstr.split(",")}}'
 kafka_hostsstr: '{% for ips in kafka_ips %}{{ips}}:{{common.kafka_port}}{% if not loop.last %},{% endif %}{% endfor %}'
 kafka_hosts: '{{kafka_hostsstr.split(",")}}'
 
-kafka:  
+kafka:
   pkg_dir: '{{apigateway_pkg_dir}}'
   pkg_name: kafka-{{module_version.kafka_version}}-release.tar.gz
   pkg_install_name: kafka_2.10-0.8.2.1.tgz
   hosts: '{{kafka_hosts}}'
-  
+
 kafka_topics:
  - accesslog
  - aks
@@ -230,8 +233,8 @@ kafka_topics:
  - refresh_topic
  - report_event
  - tenant_to_upload
- - throttle  
-  
+ - throttle
+
 asgard:
   pkg_dir: '{{apigateway_pkg_dir}}'
   pkg_name: asgard-{{module_version.asgard_version}}-release.tar.gz
@@ -257,16 +260,16 @@ shubao_go:
   script_home: /opt/{{common.user_apigateway}}/shubao
   home: /opt/{{common.user_apigateway}}
   backup_name: '{{apigateway_version}}_shubao_backup.tar.gz'
-  config_file: /opt/apigateway/shubao/conf/shubao_app.json 
-  
+  config_file: /opt/apigateway/shubao/conf/shubao_app.json
+
 etl:
   pkg_dir: '{{apigateway_pkg_dir}}'
   pkg_name: etl-{{module_version.shubao_version}}-release.tar.gz
   home: '/opt/{{common.user_apigateway}}'
   path: '/opt/{{common.user_apigateway}}/etl'
   backup_name: '{{apigateway_version}}_etl_backup.tar.gz'
-  config_file: /opt/apigateway/shubao/conf/shubao_app.json   
-  
+  config_file: /opt/apigateway/shubao/conf/shubao_app.json
+
 apigateway:
   https_port: 7443
   http_port: 8443
@@ -275,7 +278,12 @@ apigateway:
   script_home: /opt/{{common.user_apigateway}}/shubao
   home: /opt/{{common.user_apigateway}}
   config_file: /opt/apigateway/tomcat/webapps/apigateway/WEB-INF/classes/config/application.properties
-  
+
 gaussdb:
   backup_setting_file:  /opt/gaussdb/ha/tools/backupAndRestore/backup.conf
   backup_config_file:  /opt/gaussdb/ha/tools/backupAndRestore/Upload_Server.cfg
+
+omm:
+  pkg_dir: '/pkg_repo/service/ServiceOM_OMA/{{omm_agent_version}}'
+  pkg_name: 'ServiceOM_OMA_{{omm_agent_version}}.tar.gz'
+  upload_pkg_dir: /opt/omm

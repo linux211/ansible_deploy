@@ -1,0 +1,45 @@
+---
+
+# get ha info for all hosts which related to ha
+- name: set ha_group name
+  set_fact: ha_group={% if 'shubao_nginx' in group_names %}'shubao_nginx'{% elif 'shubao_pod_nginx' in group_names %}'shubao_pod_nginx'{% elif'silvan_nginx' in group_names %}'silvan_nginx'{% endif%}
+  tags:
+    - ha_uninstall
+
+- name: set local_ha_file and remote_ha_file
+  set_fact: local_ha_file={% if groups[ha_group].0 == inventory_hostname %}{{ha_group}}1{% elif groups[ha_group].1 == inventory_hostname %}{{ha_group}}2{% endif %}  remote_ha_file={% if groups[ha_group].0 == inventory_hostname %}{{ha_group}}2{% elif groups[ha_group].1 == inventory_hostname %}{{ha_group}}1{% endif %}
+  tags:
+    - ha_uninstall
+
+- name: clear the ha information files on nodes
+  file: path=/tmp/{{item}} state=absent
+  sudo: yes
+  with_items:
+    - "{{local_ha_file}}"
+    - "{{remote_ha_file}}"
+    - get_ha_info.sh
+  tags:
+    - ha_uninstall
+
+- name: clear the ha information files on dmk server
+  local_action: file path={{inventory_dir}}/roles/ha_info/files/{{local_ha_file}} state=absent
+  tags:
+    - ha_uninstall
+
+- name: upload get_info.sh to remote nodes
+  template: src=get_ha_info.sh dest=/tmp/
+
+- name:  get ha info
+  shell: sh /tmp/get_ha_info.sh get_ha_info
+  sudo: yes
+
+- name: fetch ha info
+  fetch:
+    src: /tmp/{{local_ha_file}}
+    dest: roles/ha/files/{{local_ha_file}}
+    flat: yes
+  sudo: yes
+
+- name: push remote ha file
+  copy: src={{remote_ha_file}} dest=/tmp force=yes
+  sudo: yes

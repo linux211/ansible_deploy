@@ -11,13 +11,14 @@ CASSANDRA_PORT=9042
 ZOOKEEPER_PORT={{common.zookeeper_client_port}}
 CMD_ZOOKEEPER_STATUS="/opt/apigateway/zookeeper/bin/zkServer.sh status"
 PROGRAM_TOMCAT="/opt/apigateway/tomcat"
-PROGRAM_SHUBAO="shubao"
-PROGRAM_MEMCACHED="memcached"
+PROGRAM_SHUBAO="./shubao"
+PROGRAM_MEMCACHED="./memcached"
 SHUBAO_PORT={{apigateway.https_port}}
 MEMCACHED_PORT={{common.memcache_port}}
-PROGRAM_ASGARD="asgard"
-PROGRAM_SILVAN="silvan"
+PROGRAM_ASGARD="AsgardMain"
+PROGRAM_SILVAN="SilvanMain"
 PROGRAM_ETL="etl-bootstarp"
+PROGRAM_NGINX="nginx"
 
 CHECK_RESULT={{tmp_dir}}/checkResult
 
@@ -52,13 +53,13 @@ isShubaoOk()
     local TRANS_TIMEOUT=10
 
     declare -i status_code=`curl -k -i --connect-timeout ${CONNECT_TIMEOUT} -m ${TRANS_TIMEOUT} https://{{ansible_ssh_host}}:${SHUBAO_PORT}/native/version | awk 'NR==1{print}' | awk '{print $2}'`
-    if [ ${status_code} -ge 200 ] && [ ${status_code} -lt 300 ]; then 
+    if [ ${status_code} -ge 200 ] && [ ${status_code} -lt 300 ]; then
         return 0
     else
         log "shubao api is not Ok"
         return 1
     fi
-	
+
     return 0
 }
 
@@ -70,8 +71,8 @@ isSilvanOk()
         log "silvan process is not Ok"
         return 1
     fi
-    
-    ## check silvan business 
+
+    ## check silvan business
     # time(second): wait for connection
     local CONNECT_TIMEOUT=30
 
@@ -85,7 +86,7 @@ isSilvanOk()
         log "silvan api is not Ok"
         return 1
     fi
-	
+
     return 0
 }
 
@@ -163,7 +164,7 @@ isCassandraOk()
         log "cassandra port $CASSANDRA_PORT not exist!"
         return 1
     fi
-    
+
     return 0
 }
 
@@ -193,38 +194,69 @@ isMemcachedOk()
         log "memcached port $MEMCACHED_PORT not exist!"
         return 1
     fi
-    
+
     return 0
 }
 
+isNginxOk()
+{
+
+    ## check is active node
+    source /etc/profile
+    status=`QueryHaState |awk -F'=' '/LOCAL_STATE/{print $2}'`
+
+    # ha status
+    if [ x'active' != x$status  -a x'standby' != x$status ];  then
+        log "ha status is not Ok"
+        return 1
+    fi
+
+    if [ x'active' == x$status ];  then
+         nginxCount=`ps -ef | grep ${PROGRAM_NGINX} | grep -v grep | wc -l`
+         if [ ${nginxCount} -le 0 ];then
+             log "nginx process is not Ok"
+             return 1
+         fi
+    fi
+    return 0
+
+}
 
 ## check node type and status
 checkHealth()
 {
-    if [ "$component" == "shubao" ] ; then
+    if [ -d "/opt/apigateway/shubao" ]; then
         isShubaoOk
     fi
 
-    if [ "$component" == "asgard" ] ; then
+    if [ -d "/opt/apigateway/asgard" ]; then
         isAsgardOk
     fi
-
-    if [ "$component" == "kafka" ]; then
+    if [ -d "/opt/apigateway/kafka" ]; then
         isKafkaOk
         isZookeeperOk
     fi
-
-    if [ "$component" == "memcached" ]; then
+    if [ -d "/opt/onframework/memcached" ]; then
        isMemcachedOk
     fi
-    
-    if [ "$component" == "silvan" ] ; then
+    if [ -d "/opt/onframework/silvan" ]; then
        isSilvanOk
     fi
-    
-    if [ "$component" == "cassandra" ] ; then
+
+    if [ -d "/opt/onframework/nginx" ]; then
+       isNginxOk
+    fi
+
+    if [ -d "/opt/apigateway/cassandra" ]; then
        isCassandraOk
+    fi
+
+    if [ -d "/opt/apigateway/etl" ]; then
        isEtlOk
+    fi
+
+    if [ ! -d "/opt/apigateway/shubao" ] && [ ! -d "/opt/apigateway/asgard" ] && [ ! -d "/opt/apigateway/kafka" ] && [ ! -d "/opt/onframework/memcached" ] &&  [ ! -d "/opt/onframework/silvan" ] && [ ! -d "/opt/apigateway/cassandra" ] && [ ! -d "/opt/apigateway/etl" ] && [ ! -d "/opt/onframework/nginx" ];then
+        echo "The node don't involve health check"
     fi
 }
 
@@ -233,5 +265,5 @@ checkHealth
 if [ -s "${CHECK_RESULT}" ]; then
     echo "False"
 else
-    echo "True" 
+    echo "True"
 fi

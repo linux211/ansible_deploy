@@ -11,12 +11,12 @@ PROGRAM_ZOOKEEPER="QuorumPeerMain"
 ZOOKEEPER_PORT=2181
 CMD_ZOOKEEPER_STATUS="/opt/apigateway/zookeeper/bin/zkServer.sh status"
 PROGRAM_TOMCAT="/opt/apigateway/tomcat"
-PROGRAM_SHUBAO="shubao"
-PROGRAM_MEMCACHED="memcached"
+PROGRAM_SHUBAO="./shubao"
+PROGRAM_MEMCACHED="./memcached"
 SHUBAO_PORT=7443
 MEMCACHED_PORT=11211
-PROGRAM_ASGARD="asgard"
-PROGRAM_SILVAN="silvan"
+PROGRAM_ASGARD="AsgardMain"
+PROGRAM_SILVAN="SilvanMain"
 PROGRAM_NGINX="nginx"
 PROGRAM_ETL="etl-bootstarp"
 
@@ -33,7 +33,7 @@ isShubaoOk()
 {
      ## check  process
     shubaoCount=`ps -ef | grep -E ${PROGRAM_SHUBAO}\|${PROGRAM_TOMCAT} | grep -v grep | wc -l`
-    
+
     if [ ${shubaoCount} -ne 1 ];then
         echo "shubao process is not Ok"
     else
@@ -42,7 +42,7 @@ isShubaoOk()
 
     ## check  port
     isPortExist=$(netstat -nlt | grep ${SHUBAO_PORT})
-    
+
     if [ -z "${isPortExist}" ]; then
         echo "process port $SHUBAO_PORT not exist!"
     else
@@ -56,7 +56,7 @@ isShubaoOk()
     local TRANS_TIMEOUT=10
 
     declare -i status_code=`curl -k -i --silent --connect-timeout ${CONNECT_TIMEOUT} -m ${TRANS_TIMEOUT} https://${LOCAL_HOST_IP}:${SHUBAO_PORT}/native/version | awk 'NR==1{print}' | awk '{print $2}'`
-    if [ ${status_code} -ge 200 ] && [ ${status_code} -lt 300 ]; then 
+    if [ ${status_code} -ge 200 ] && [ ${status_code} -lt 300 ]; then
         echo "shubao api is Ok"
     else
         echo "shubao api is not Ok"
@@ -72,8 +72,8 @@ isSilvanOk()
     else
     echo "silvan process is Ok"
     fi
-    
-    ## check silvan business 
+
+    ## check silvan business
     # time(second): wait for connection
     local CONNECT_TIMEOUT=30
 
@@ -81,7 +81,7 @@ isSilvanOk()
     local TRANS_TIMEOUT=10
 
     declare -i status_code=`curl -k  -i --silent --connect-timeout ${CONNECT_TIMEOUT} -m ${TRANS_TIMEOUT} https://${LOCAL_HOST_IP}:8086/silvan/rest/v1.0/health-check | awk 'NR==1{print}' | awk '{print $2}'`
-    
+
     if [ ${status_code} -ge 200 ] && [ ${status_code} -lt 300 ]; then
         echo "silvan api is Ok"
     else
@@ -200,17 +200,17 @@ isMemcachedOk()
 
 isNginxOk()
 {
-  
+
     ## check is active node
     source /etc/profile
     status=`QueryHaState |awk -F'=' '/LOCAL_STATE/{print $2}'`
-    
+
     # ha status
     if [ x'active' != x$status  -a x'standby' != x$status ];  then
         echo "ha status is not Ok"
     else
         echo "ha status is Ok"
-    fi 
+    fi
 
     if [ x'active' == x$status ];  then
          nginxCount=`ps -ef | grep ${PROGRAM_NGINX} | grep -v grep | wc -l`
@@ -218,7 +218,7 @@ isNginxOk()
              echo "nginx process is not Ok"
          else
              echo "nginx process is Ok"
-         fi   
+         fi
     fi
 
 }
@@ -229,7 +229,7 @@ checkHealth()
     if [ -d "/opt/apigateway/shubao" ]; then
         isShubaoOk
     fi
-    
+
     if [ -d "/opt/apigateway/asgard" ]; then
         isAsgardOk
     fi
@@ -243,19 +243,19 @@ checkHealth()
     if [ -d "/opt/onframework/silvan" ]; then
        isSilvanOk
     fi
-    
+
     if [ -d "/opt/onframework/nginx" ]; then
        isNginxOk
     fi
-    
+
     if [ -d "/opt/apigateway/cassandra" ]; then
        isCassandraOk
     fi
-    
+
     if [ -d "/opt/apigateway/etl" ]; then
        isEtlOk
     fi
-    
+
     if [ ! -d "/opt/apigateway/shubao" ] && [ ! -d "/opt/apigateway/asgard" ] && [ ! -d "/opt/apigateway/kafka" ] && [ ! -d "/opt/onframework/memcached" ] &&  [ ! -d "/opt/onframework/silvan" ] && [ ! -d "/opt/apigateway/cassandra" ] && [ ! -d "/opt/apigateway/etl" ] && [ ! -d "/opt/onframework/nginx" ];then
         echo "The node don't involve health check"
     fi

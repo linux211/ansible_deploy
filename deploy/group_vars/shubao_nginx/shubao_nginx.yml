@@ -1,6 +1,8 @@
 float_ip: '{{shubao_lb_float_ip}}'
 component: nginx
 flag_type_pod: N
+
 public_shubao_ipstr: '{% for host in groups["shubao_public"] %}{{ hostvars[host]["ansible_ssh_host"] }}{% if not loop.last %},{% endif %}{% endfor %}'
-nlbips: '{{public_shubao_ipstr.split(",")}}' 
+nlbips: '{{public_shubao_ipstr.split(",")}}'
 https_port: '{{apigateway.https_port}}'
+ansible_ssh_user: '{{common.user_console}}'

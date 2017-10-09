@@ -1,24 +1,24 @@
 ---
-# 添加无密码sudo权限 
+# 添加无密码sudo权限
 - name: add sudo no password permission
   lineinfile: dest={{common.etc_sudoer_path}} regexp='^{{common.user_console}} ALL=NOPASSWD:ALL' line='{{common.user_console}} ALL=NOPASSWD:ALL'
   sudo: yes
   tags:
-    - silvan_uninstall  
+    - silvan_uninstall
 
-# 添加无密码sudo权限   
+# 添加无密码sudo权限
 - name: add no password to dbadmin
   lineinfile: dest={{common.etc_sudoer_path}} regexp='^{{common.user_console}} ALL=(dbadmin) NOPASSWD:ALL' line='^{{common.user_console}} ALL=(dbadmin) NOPASSWD:ALL'
-  sudo: yes  
+  sudo: yes
 
 - name: change home mode
   shell: chmod 755 /opt; chmod 755 {{silvan.untar_dir}}
   sudo: yes
-  
+
 - stat: path={{silvan.bin_dir}}
   register: p
   tags:
-    - silvan_uninstall  
+    - silvan_uninstall
 
 # 停止silvan服务
 - name: stop
@@ -35,30 +35,30 @@
   shell: sh  {{silvan.install_dir}}/install/uninstall_silvan.sh
   when:  p.stat.isdir is defined and p.stat.isdir
   ignore_errors: true
-  sudo: yes 
+  sudo: yes
   tags:
     - silvan_uninstall
 
 - stat: path={{silvan.install_dir}}
   register: p_install
   tags:
-    - silvan_uninstall     
-    
+    - silvan_uninstall
+
 # 删除silvan目录
 - name: remove silvan
   shell: chmod 750 {{silvan.install_dir}} -R ; rm -r {{silvan.install_dir}}
   when:  p_install.stat.isdir is defined and p_install.stat.isdir
   ignore_errors: true
-  sudo: yes 
+  sudo: yes
   tags:
-    - silvan_uninstall    
+    - silvan_uninstall
 
 - name: create log dir
   sudo: yes
-  file: path={{common.console_log}} state=directory owner={{ansible_ssh_user}} group={{ansible_ssh_user}} mode=700      
-    
+  file: path={{common.console_log}} state=directory owner={{ansible_ssh_user}} group={{ansible_ssh_user}} mode=700
+
 # 拷贝silvan安装包
-- name: upload silvan package 
+- name: upload silvan package
   copy: src={{silvan.pkg_dir}}/{{silvan.pkg_name}} dest={{common.home_dir}} force=yes
 
 # 解压silvan安装包
@@ -90,13 +90,13 @@
 
 - name: config initial database
   lineinfile: dest='{{silvan.make_dir}}/silvan.conf' regexp='^silvan\.initial\.database=' line='silvan.initial.database={{initial_database}}' ##是否初始化数据库
-  
+
 - name: config initial table
-  lineinfile: dest='{{silvan.make_dir}}/silvan.conf' regexp='^silvan\.table\.init=' line='silvan.table.init={{initial_table}}' ##是否初始化table 
-  
+  lineinfile: dest='{{silvan.make_dir}}/silvan.conf' regexp='^silvan\.table\.init=' line='silvan.table.init={{initial_table}}' ##是否初始化table
+
 - name: config initial table
-  lineinfile: dest='{{silvan.make_dir}}/silvan.conf' regexp='^silvan\.table\.sqlpackage\.name=' line='silvan.table.sqlpackage.name={{silvan.sqlpackage_name}}' ##更新表的脚本路径   
-  
+  lineinfile: dest='{{silvan.make_dir}}/silvan.conf' regexp='^silvan\.table\.sqlpackage\.name=' line='silvan.table.sqlpackage.name={{silvan.sqlpackage_name}}' ##更新表的脚本路径
+
 - name: config iam ip
   lineinfile: dest='{{silvan.make_dir}}/silvan.conf' regexp='^iam\.server\.ip=' line='iam.server.ip={{common_iam.ip}}'
 
@@ -110,8 +110,8 @@
 - name: install
   ignore_errors: true
   shell: '{{silvan.make_dir}}/install_silvan.sh'
-  sudo: yes 
-  
+  sudo: yes
+
   # 修改silvan配置文件
 - name: config
   template: src=application.properties dest={{silvan.certificate_dir}}
@@ -145,18 +145,22 @@
 - name: rm silvan package
   shell: rm -rf /opt/{{common.user_console}}/{{silvan.pkg_name}}
 
-- name: delete sudo NOPASSWORD 
+- name: delete sudo NOPASSWORD
   shell: sed -i "/{{common.user_console}} ALL=NOPASSWD:ALL/d" {{common.etc_sudoer_path}}
   sudo: yes
   tags:
-    - silvan_uninstall   
-  
+    - silvan_uninstall
+
 - name: delete sudo NOPASSWORD to dbadmin
   shell: sed -i "/{{common.user_console}} ALL=(dbadmin) NOPASSWD:ALL/d" {{common.etc_sudoer_path}}
-  sudo: yes 
+  sudo: yes
 
 - name: change log  mode
   shell: chown onframework:onframework /var/log/console -R
+  sudo: yes
+
+- name: change permissions of rootkey
+  shell: chown onframework:onframework {{silvan.install_dir}}/config/rootkey/*
   sudo: yes
 
   # 启动silvan服务

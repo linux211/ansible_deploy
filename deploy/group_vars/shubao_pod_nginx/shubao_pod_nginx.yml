@@ -1,14 +1,16 @@
 float_ip: '{{pod_shubao_lb_float_ip}}'
-component: nginx  
+component: nginx
 flag_type_pod: Y
 ispod: true
 
 public_shubao_ipstr: '{% for host in groups["shubao_public"] %}{{ hostvars[host]["ansible_ssh_host"] }}{% if not loop.last %},{% endif %}{% endfor %}'
 pod_shubao_ipstr: '{% for host in groups["shubao_pod"] %}{{ hostvars[host]["ansible_ssh_host"] }}{% if not loop.last %},{% endif %}{% endfor %}'
 
-public_host_list: '{{public_shubao_ipstr.split(",")}}' 
-pod_host_list: '{{pod_shubao_ipstr.split(",")}}' 
+public_host_list: '{{public_shubao_ipstr.split(",")}}'
+pod_host_list: '{{pod_shubao_ipstr.split(",")}}'
+nlbips: '{{pod_host_list if groups.shubao_pod.0 is defined else public_host_list }}'
 
-nlbips: '{{pod_host_list if pod_host_list|length > 1 else public_host_list }}'
-https_port: '{{apigateway.https_port}}' 
-http_port: '{{apigateway.http_port}}' 
+https_port: '{{apigateway.https_port}}'
+http_port: '{{apigateway.http_port}}'
+
+ansible_ssh_user: '{{common.user_console}}'

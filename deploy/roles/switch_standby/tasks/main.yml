@@ -1,0 +1,53 @@
+---
+
+- name: set variable of ha_dir
+  set_fact: ha_dir={% if 'silvan' not in group_names %}"/opt/{{common.user_console}}/ha"{% else %}"/opt/gaussdb/ha"{% endif %}
+
+- stat: path={{ha_dir}}
+  register: p
+  sudo: yes
+  tags:
+    - switch_standby
+
+- name: check the ha status
+  shell: /{{ha_dir}}/bin/QueryHaState| awk -F= '$1=="LOCAL_STATE"{print $2}'
+  when:  p.stat.isdir is defined and p.stat.isdir
+  sudo: yes
+  register: ha_status
+  tags:
+    - switch_standby
+
+- name: debug ha info
+  debug: msg='The ha info is {{ha_status.stdout}}'
+  when: p.stat.isdir is defined and p.stat.isdir
+  tags:
+    - switch_standby
+
+- name: Switch state to standby
+  shell: "{{ha_dir}}/bin/switchover"
+  when: ha_status.stdout is defined and ha_status.stdout and '{{ha_status.stdout}}' == 'active'
+  sudo: yes
+  tags:
+    - switch_standby
+
+- action: shell {{ha_dir}}/bin/QueryHaState
+  register: result
+  until: result.stdout.find("LOCAL_STATE=standby") != -1
+  retries: 10
+  delay: 5
+  sudo: yes
+
+- name: check the ha status
+  shell: /{{ha_dir}}/bin/QueryHaState| awk -F= '$1=="LOCAL_STATE"{print $2}'
+  when:  p.stat.isdir is defined and p.stat.isdir
+  sudo: yes
+  register: ha_status
+  tags:
+    - switch_standby
+
+- name: Check the result of the switch_standby
+  debug: msg='The ha info is {{ha_status.stdout}}'
+  when: p.stat.isdir is defined and p.stat.isdir
+  tags:
+    - switch_standby
+

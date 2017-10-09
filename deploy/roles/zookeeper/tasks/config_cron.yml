@@ -1,0 +1,9 @@
+---
+
+- name: Copy monitoring network script to remote host
+  template: src=monitor_network.sh dest=/opt/apigateway/zookeeper/bin/ mode=550 group=apigateway owner=apigateway force=yes
+  sudo: yes
+
+- name: Configure the monitoring network timing task
+  shell: sed -i '/\/opt\/apigateway\/zookeeper\/bin\/monitor_network.sh/d' /etc/crontab;sed -i '$a\*/1 * * * * root  sh /opt/apigateway/zookeeper/bin/monitor_network.sh' /etc/crontab
+  sudo: yes

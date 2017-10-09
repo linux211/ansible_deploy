@@ -1,7 +1,6 @@
          
 - hosts: asgard
   serial: 1
-  remote_user: '{{common.user_apigateway}}'
   roles:
     - oc_asgard
     - asgard
@@ -9,7 +8,6 @@
 
 - hosts: silvan
   serial: 1
-  remote_user: '{{common.user_console}}'
   roles:
     - oc_silvan
     - silvan
@@ -17,7 +15,6 @@
     
 - hosts: shubao
   serial: 1
-  remote_user: '{{common.user_apigateway}}'
   roles:
     - oc_shubao_go
     - shubao_go

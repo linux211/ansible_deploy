@@ -31,12 +31,14 @@
 - name: get health check result
   shell: sh {{tmp_dir}}/check_status.sh
   register: checkResult
+  sudo: yes
   tags:
     - health_check    
 
 - name: print check Result when faild
   shell: cat {{tmp_dir}}/checkResult
   register: result_log
+  sudo: yes
   when: checkResult.stdout is defined and checkResult.stdout == 'False'
   tags:
     - health_check    

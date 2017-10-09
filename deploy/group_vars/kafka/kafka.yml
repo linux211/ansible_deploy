@@ -1,3 +1,4 @@
 
 component: kafka
-
+ansible_ssh_user: '{{common.user_apigateway}}'
+IS_STANDBY: ""

@@ -1,0 +1,17 @@
+---
+
+- name: reboot system after 1 minute
+  shell: /sbin/shutdown -r +1  'The system will reboot after 1 minute'
+  sudo: yes
+  tags:
+    - reboot
+
+- name: Wait 300 seconds for port 22 to become open
+  wait_for:
+    port: 22
+    host: '{{ (ansible_ssh_host|default(ansible_host))|default(inventory_hostname) }}'
+    search_regex: OpenSSH
+    delay: 70
+  connection: local
+  tags:
+    - reboot

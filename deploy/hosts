@@ -1,20 +1,13 @@
 [kafka]
-kafka1 local_id=0 ansible_ssh_host=x.x.x.x hostname=I-APIGW-KFK01 IS_STANDBY=""
-kafka2 local_id=1 ansible_ssh_host=x.x.x.x hostname=I-APIGW-KFK02 IS_STANDBY=""
-kafka3 local_id=2 ansible_ssh_host=x.x.x.x hostname=I-APIGW-KFK03 IS_STANDBY=""
-#kafka4 local_id=3 ansible_ssh_host=x.x.x.x hostname=I-APIGW-KFK04 IS_STANDBY=""
-#kafka5 local_id=4 ansible_ssh_host=x.x.x.x hostname=I-APIGW-KFK05 IS_STANDBY=N
-#kafka6 local_id=5 ansible_ssh_host=x.x.x.x hostname=I-APIGW-KFK06 IS_STANDBY=Y
-
-[kafka:vars]
-ARB_IP=x.x.x.x,x.x.x.x
-ARB_PORT=2379
-LOCAL_AZ=DC1
-REMOTE_AZ=DC2
+kafka1 local_id=0 ansible_ssh_host=x.x.x.x hostname=I-APIGW-KFK01
+kafka2 local_id=1 ansible_ssh_host=x.x.x.x hostname=I-APIGW-KFK02
+kafka3 local_id=2 ansible_ssh_host=x.x.x.x hostname=I-APIGW-KFK03 IS_STANDBY=N
+#kafka4 local_id=2 ansible_ssh_host=x.x.x.x hostname=I-APIGW-KFK04 IS_STANDBY=Y
+#kafka5 local_id=3 ansible_ssh_host=x.x.x.x hostname=I-APIGW-KFK05
 
 [memcached]
-memcached1 ansible_ssh_host=x.x.x.x hostname=I-APIGW-MEM01   
-memcached2 ansible_ssh_host=x.x.x.x hostname=I-APIGW-MEM02   
+memcached1 ansible_ssh_host=x.x.x.x hostname=I-APIGW-MEM01
+memcached2 ansible_ssh_host=x.x.x.x hostname=I-APIGW-MEM02
 
 [asgard]
 asgard1 ansible_ssh_host=x.x.x.x hostname=I-APIGW-ASGARD01
@@ -22,12 +15,12 @@ asgard2 ansible_ssh_host=x.x.x.x hostname=I-APIGW-ASGARD02
 
 [silvan]
 silvan1 ansible_ssh_host=x.x.x.x hostname=I-APIGW-DB01
-silvan2 ansible_ssh_host=x.x.x.x hostname=I-APIGW-DB02 
+silvan2 ansible_ssh_host=x.x.x.x hostname=I-APIGW-DB02
 
 [cassandra]
-#cassandra1 ansible_ssh_host=x.x.x.x hostname=I-APIGW-CASS01
-#cassandra2 ansible_ssh_host=x.x.x.x hostname=I-APIGW-CASS02
-#cassandra3 ansible_ssh_host=x.x.x.x hostname=I-APIGW-CASS03
+#cassandra1 ansible_ssh_host=x.x.x.x hostname=I-APIGW-CASS01 INIT_NODE=N
+#cassandra2 ansible_ssh_host=x.x.x.x hostname=I-APIGW-CASS02 INIT_NODE=N
+#cassandra3 ansible_ssh_host=x.x.x.x hostname=I-APIGW-CASS03 INIT_NODE=Y
 
 [shubao_public]
 public_shubao1  ansible_ssh_host=x.x.x.x hostname=I-APIGW-SB01
@@ -46,47 +39,13 @@ public_shubao4  ansible_ssh_host=x.x.x.x hostname=I-APIGW-SB04
 #shubao_go04 ansible_ssh_host=x.x.x.x hostname=I-APIGW-SBH04
 
 [shubao_nginx]
-lb01  ansible_ssh_host=x.x.x.x hostname=I-APIGW-LB01 IS_PRIMARY=ha_primary 
-lb02  ansible_ssh_host=x.x.x.x hostname=I-APIGW-LB02 IS_PRIMARY=ha_standby  
+lb01  ansible_ssh_host=x.x.x.x hostname=I-APIGW-LB01
+lb02  ansible_ssh_host=x.x.x.x hostname=I-APIGW-LB02
 
 [shubao_pod_nginx]
-lb03 ansible_ssh_host=x.x.x.x hostname=I-APIGW-LB03  IS_PRIMARY=ha_primary      
-lb04 ansible_ssh_host=x.x.x.x hostname=I-APIGW-LB04  IS_PRIMARY=ha_standby 
+lb03 ansible_ssh_host=x.x.x.x hostname=I-APIGW-LB03
+lb04 ansible_ssh_host=x.x.x.x hostname=I-APIGW-LB04
 
 [silvan_nginx]
-ngxs01  ansible_ssh_host=x.x.x.x hostname=I-APIGW-NGXS01  IS_PRIMARY=ha_primary 
-ngxs02  ansible_ssh_host=x.x.x.x hostname=I-APIGW-NGXS02  IS_PRIMARY=ha_standby
-
-[shubao:children]
-shubao_public
-shubao_pod
-shubao_tsz
-
-[nginx:children]
-silvan_nginx
-shubao_nginx
-shubao_pod_nginx
-
-[common_apigateway:children]
-kafka
-cassandra
-asgard
-shubao
-
-[common_onframework:children]
-silvan
-nginx
-memcached
-
-[ha_nginx_silvan:children]
-silvan_nginx
-
-[ha_nginx_shubao:children]
-shubao_nginx
-
-[ha_nginx_pod_shubao:children]
-shubao_pod_nginx
-
-[initsysuser:children]
-common_apigateway
-common_onframework
+ngxs01  ansible_ssh_host=x.x.x.x hostname=I-APIGW-NGXS01
+ngxs02  ansible_ssh_host=x.x.x.x hostname=I-APIGW-NGXS02

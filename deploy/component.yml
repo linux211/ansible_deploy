@@ -1,346 +1,226 @@
 ---
+
 - hosts: memcached
-  remote_user: '{{common.user_console}}'
-  gather_facts: False    
+  gather_facts: False
   roles:
     - jdk
     - memcached
-    - ntp
     - dns
-    - common    
+    - ntp
+    - common
   tags:
     - memcached
-    
+
 - hosts: kafka
-  remote_user: '{{common.user_apigateway}}'
-  gather_facts: False  
+  gather_facts: False
   roles:
-    - get_zk_ip_addr 
+    - get_zk_ip_addr
   tags:
-    - get_zk_ip_addr    
-  
+    - get_zk_ip_addr
+
 - hosts: kafka
-  remote_user: '{{common.user_apigateway}}'
-  gather_facts: False  
+  gather_facts: False
   roles:
-    - jdk
-    - zookeeper 
+    - zookeeper
   tags:
     - zookeeper
-  
+
 - hosts: kafka
-  remote_user: '{{common.user_apigateway}}'
-  gather_facts: False    
+  gather_facts: False
   roles:
     - jdk
     - kafka
-    - dns    
+    - dns
     - ntp
-    - common    
+    - common
   tags:
     - kafka
-    
+
 - hosts: kafka
-  remote_user: '{{common.user_apigateway}}'
-  gather_facts: False    
+  gather_facts: False
   roles:
     - jdk
-    - zookeeper    
+    - zookeeper
     - kafka
-    - dns    
+    - dns
     - ntp
     - common
   tags:
     - zk_kfk
 
 - hosts: cassandra
-  remote_user: '{{common.user_apigateway}}'
-  gather_facts: False    
+  gather_facts: False
   roles:
-    - jdk  
+    - jdk
     - cassandra
     - etl
-    - cassandra_init    
-    - dns    
+    - { role: cassandra_init, when: "INIT_NODE == 'Y'" }
+    - dns
     - ntp
     - common
   tags:
-    - cassandra     
-    
+    - cassandra
+
 - hosts: asgard
-  remote_user: '{{common.user_apigateway}}'
-  gather_facts: False  
+  gather_facts: False
   roles:
     - jdk
     - asgard
-    - dns    
+    - dns
     - ntp
-    - common    
+    - common
   tags:
     - asgard
 
-- hosts: shubao
-  remote_user: '{{common.user_apigateway}}'
-  gather_facts: False  
+- hosts: [shubao_public,shubao_pod,shubao_tsz]
+  gather_facts: False
   roles:
-    - shubao_go 
-    - dns    
+    - shubao_go
+    - dns
     - ntp
-    - common      
+    - common
   tags:
-    - shubao 
-      
+    - shubao
+
 - hosts: silvan
-  remote_user: '{{common.user_console}}'
-  gather_facts: False    
+  gather_facts: False
   roles:
     - jdk
     - silvan
-    - dns    
+    - dns
     - ntp
-    - common    
+    - common
   tags:
-    - silvan 
-    
+    - silvan
+
 - hosts: silvan
-  remote_user: '{{common.user_console}}'
-  gather_facts: False  
+  gather_facts: False
   roles:
     - config_gaussdb_backup
   tags:
-    - config_db_backup     
-    
-- hosts: nginx
-  remote_user: '{{common.user_console}}'
-  gather_facts: False  
+    - config_db_backup
+
+- hosts: [shubao_nginx,shubao_pod_nginx,silvan_nginx]
+  gather_facts: False
   roles:
     - jdk
     - nginx
-    - dns    
+    - dns
     - ntp
-    - common      
+    - common
   tags:
-    - nginx  
+    - nginx
 
-- hosts: common_onframework
-  remote_user: '{{common.user_console}}'
+- hosts: shubao_nginx;shubao_pod_nginx;silvan_nginx
+  gather_facts: False
   roles:
-    - dns  
+    - ha
+  tags:
+    - ha_nginx
+
+- hosts: all
+  gather_facts: False
+  roles:
+    - health_check
+  tags:
+    - health_check
+
+- hosts: all
+  gather_facts: False
+  roles:
+    - base_check
+  tags:
+    - base_check
+
+- hosts: all
+  gather_facts: False
+  roles:
+    - cancel_root
+  tags:
+    - cancel_root
+
+- hosts: all
+  gather_facts: False
+  roles:
+    - before_deploy
+  tags:
+    - before_deploy
+
+- hosts: all
+  gather_facts: False
+  roles:
+    - elk
+  tags:
+    - elk
+
+- hosts: all
+  gather_facts: False
+  roles:
+    - jdk
+    - dns
+    - ntp
+    - common
+  tags:
+    - common_install
+
+- hosts: all
+  gather_facts: False
+  roles:
+    - dns
     - ntp
     - common
   tags:
     - common
-    
-- hosts: common_apigateway
-  remote_user: '{{common.user_apigateway}}'
-  gather_facts: False
-  roles:
-    - dns  
-    - ntp
-    - common
-  tags:
-    - common   
 
-- hosts: common_onframework
-  remote_user: '{{common.user_console}}'
-  gather_facts: False
-  roles:
-    - dns
-  tags:
-    - dns
-    
-- hosts: common_apigateway
-  remote_user: '{{common.user_apigateway}}'
+- hosts: all
   gather_facts: False
   roles:
     - dns
   tags:
     - dns
 
-- hosts: common_onframework
-  remote_user: '{{common.user_console}}'
+- hosts: all
   gather_facts: False
   roles:
     - ntp
   tags:
     - ntp
-    
-- hosts: common_apigateway
-  remote_user: '{{common.user_apigateway}}'
-  gather_facts: False
-  roles:
-    - ntp
-  tags:
-    - ntp     
 
-- hosts: initsysuser
-  remote_user: '{{common.root_user}}'
+- hosts: all
+  gather_facts: False
+  roles:
+    - initsystem
+    - initsysuser
+  tags:
+    - init_sys
+
+- hosts: all
   gather_facts: False
   roles:
     - initsysuser
   tags:
     - initsysuser
-    
-- hosts: common
-  gather_facts: False
-  roles:
-    - update_password
-  tags:
-    - update_password    
 
-- hosts: initsysuser
-  remote_user: '{{common.root_user}}'
+- hosts: all
   gather_facts: False
   roles:
     - initsystem
   tags:
-    - initsystem 
+    - init_disk
 
-- hosts: common_apigateway
-  remote_user: '{{common.user_apigateway}}'
+- hosts: all
   gather_facts: False
   roles:
-    - jdk
+    - common_clean
   tags:
-    - jdk
-    
-- hosts: common_onframework
-  remote_user: '{{common.user_console}}'
-  gather_facts: False
-  roles:
-    - jdk
-  tags:
-    - jdk 
-    
-- hosts: ha_nginx_shubao
-  remote_user: '{{common.user_console}}'
-  gather_facts: False
-  roles:
-    - ha_info
-  tags:
-    - ha_info_shubao
+    - common_clean
 
-- hosts: ha_nginx_shubao
-  remote_user: '{{common.user_console}}'
+- hosts: all
   gather_facts: False
   roles:
-    - ha_nginx
+    - common_clean
   tags:
-    - ha_nginx_shubao
-
-- hosts: ha_nginx_silvan
-  remote_user: '{{common.user_console}}'
-  gather_facts: False
-  roles:
-    - ha_info
-  tags:
-    - ha_info_silvan    
-
-- hosts: ha_nginx_silvan
-  remote_user: '{{common.user_console}}'
-  gather_facts: False
-  roles:
-    - ha_nginx
-  tags:
-    - ha_nginx_silvan
-
-- hosts: ha_nginx_pod_shubao
-  remote_user: '{{common.user_console}}'
-  gather_facts: False
-  roles:
-    - ha_info
-  tags:
-    - ha_info_pod_shubao
-
-- hosts: ha_nginx_pod_shubao
-  remote_user: '{{common.user_console}}'
-  gather_facts: False
-  roles:
-    - ha_nginx
-    - config_network
-  tags:
-    - ha_nginx_pod_shubao
-    
- 
-- hosts: common_onframework
-  remote_user: '{{common.user_console}}'
-  gather_facts: False
-  roles:
-    - health_check
-  tags:
-    - health_check
-    
-- hosts: common_apigateway
-  remote_user: '{{common.user_apigateway}}'
-  gather_facts: False
-  roles:
-    - health_check
-  tags:
-    - health_check  
-    
-- hosts: common_onframework
-  remote_user: '{{common.user_console}}'
-  gather_facts: False
-  roles:
-    - base_check
-  tags:
-    - base_check
-    
-- hosts: common_apigateway
-  remote_user: '{{common.user_apigateway}}'
-  gather_facts: False
-  roles:
-    - base_check
-  tags:
-    - base_check    
-    
-- hosts: common_onframework
-  remote_user: '{{common.user_console}}'
-  gather_facts: False
-  roles:
-    - cancel_root
-  tags:
-    - cancel_root    
-
-- hosts: common_apigateway
-  remote_user: '{{common.user_apigateway}}'
-  gather_facts: False
-  roles:
-    - cancel_root
-  tags:
-    - cancel_root
-
-- hosts: common_onframework
-  remote_user: '{{common.user_console}}'
-  gather_facts: False
-  roles:
-    - before_deploy
-  tags:
-    - before_deploy    
-
-- hosts: common_apigateway
-  remote_user: '{{common.user_apigateway}}'
-  gather_facts: False
-  roles:
-    - before_deploy
-  tags:
-    - before_deploy  
-    
-- hosts: common_onframework
-  remote_user: '{{common.user_console}}'
-  gather_facts: False
-  roles:
-    - elk
-  tags:
-    - elk    
-
-- hosts: common_apigateway
-  remote_user: '{{common.user_apigateway}}'
-  gather_facts: False
-  roles:
-    - elk
-  tags:
-    - elk    
+    - post_common_clean
 
 - hosts: 127.0.0.1
   connection: local
@@ -349,3 +229,37 @@
     - check_var
   tags:
     - check_var
+
+
+- hosts: all
+  gather_facts: False
+  roles:
+    - common
+
+- hosts: all
+  gather_facts: False
+  roles:
+    - common
+  tags:
+    - post_common
+
+- hosts: all
+  gather_facts: False
+  roles:
+    - common_clean
+  tags:
+    - upgrade_common_clean
+
+- hosts: [shubao_public,shubao_pod,shubao_tsz,asgard,silvan]
+  gather_facts: False
+  roles:
+    - omm
+  tags:
+    - omm
+
+- hosts: shubao_nginx;shubao_pod_nginx;silvan_nginx
+  gather_facts: False
+  roles:
+    - ha_upgrade
+  tags:
+    - upgrade_ha

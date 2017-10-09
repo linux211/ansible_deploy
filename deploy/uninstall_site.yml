@@ -1,54 +1,48 @@
+---
+
+- hosts: silvan;asgard;shubao_public;shubao_pod;shubao_tsz
+  roles:
+    - omm
+
 - hosts: memcached
-  remote_user: '{{common.user_console}}'
   roles:
     - memcached
-    
-- hosts: nginx
-  remote_user: '{{common.user_console}}'
+
+- hosts: shubao_nginx;shubao_pod_nginx;silvan_nginx
   roles:
-    - nginx 
-    - ha_nginx 
+    - nginx
+    - ha
 
 - hosts: silvan
-  remote_user: '{{common.user_console}}'
   roles:
     - silvan
 
+
 - hosts: asgard
-  remote_user: '{{common.user_apigateway}}'
   roles:
     - asgard
-    
+
+
 - hosts: cassandra
-  remote_user: '{{common.user_apigateway}}'
   roles:
-    - cassandra     
-    - etl   
-    
+    - cassandra
+    - etl
+
 - hosts: kafka
-  remote_user: '{{common.user_apigateway}}'
   roles:
     - kafka
     - zookeeper
-    
-- hosts: shubao
-  remote_user: '{{common.user_apigateway}}'
+
+- hosts: [shubao_public,shubao_pod,shubao_tsz]
   roles:
     - apigateway
     - tomcat
     - shubao_go
 
-      
-- hosts: common_onframework
-  remote_user: '{{common.user_console}}'
-  roles:
-    - jdk
-    - cancel_root
-    - common_clean 
 
-- hosts: common_apigateway
-  remote_user: '{{common.user_apigateway}}'
+- hosts: all
   roles:
     - jdk
     - cancel_root
-    - common_clean 
+    - common_clean
+

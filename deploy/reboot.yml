@@ -1,0 +1,72 @@
+---
+
+- hosts: all
+  gather_facts: False 
+  roles: 
+    - health_check
+  tags:
+    - pre_health_check
+
+- hosts: all
+  gather_facts: False 
+  roles: 
+    - { role: reboot, tags: reboot }
+  tags:
+    - reboot
+
+- hosts: memcached
+  gather_facts: False 
+  serial: 1
+  roles:
+    - memcached
+
+- hosts: silvan
+  gather_facts: False 
+  serial: 1
+  roles:
+    - silvan
+    
+- hosts: asgard
+  gather_facts: False    
+  roles:
+    - asgard
+   
+- hosts: kafka
+  serial: 1  
+  gather_facts: False 
+  roles:
+    - zookeeper
+    - kafka
+ 
+- hosts: cassandra
+  gather_facts: False 
+  serial: 1
+  roles:
+    - cassandra
+
+- hosts: silvan;shubao_nginx;shubao_pod_nginx;silvan_nginx
+  gather_facts: False 
+  roles: 
+    - switch_standby
+  tags:
+    - switch_standby
+    
+- hosts: [shubao_nginx,shubao_pod_nginx,silvan_nginx]
+  gather_facts: False   
+  serial: 1
+  roles:
+    - nginx
+
+- hosts: [shubao_public,shubao_pod,shubao_tsz]
+  gather_facts: False
+  serial: 2
+  roles:
+    - shubao_go
+
+- hosts: all
+  gather_facts: False 
+  roles: 
+    - health_check
+  tags:
+    - health_check
+

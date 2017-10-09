@@ -1,2 +1,3 @@
 
 component: cassandra
+ansible_ssh_user: '{{common.user_apigateway}}'

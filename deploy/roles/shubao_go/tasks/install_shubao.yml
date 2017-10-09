@@ -3,15 +3,15 @@
   register: p
   tags:
     - shubao_go_uninstall
-    - stop_shubao    
-    
+    - stop_shubao
+
 - name: stop shubao crontab
   shell: service cron stop
-  when:  p.stat.isdir is defined and p.stat.isdir  
-  sudo: yes 
+  when:  p.stat.isdir is defined and p.stat.isdir
+  sudo: yes
   tags:
-    - shubao_go_uninstall 
-    - stop_shubao    
+    - shubao_go_uninstall
+    - stop_shubao
 
 - name: stop
   shell: sh {{apigateway.script_home}}/bin/shubao_monitor.sh stop
@@ -45,18 +45,18 @@
 
 - name: config shubao_app.json
   template: src=shubao_app.json dest={{shubao_go.script_home}}/conf
-  
+
 - name: config cassandra_config.json
-  template: src=cassandra_config.json dest={{shubao_go.script_home}}/conf 
+  template: src=cassandra_config.json dest={{shubao_go.script_home}}/conf
 
 - name: config ces_reporter_config.json
-  template: src=ces_reporter_config.json dest={{shubao_go.script_home}}/conf  
+  template: src=ces_reporter_config.json dest={{shubao_go.script_home}}/conf
 
 - name: config kafka.json
   template: src=kafka.json dest={{shubao_go.script_home}}/conf
-  
+
 - name: config oc key
-  template: src=oc-key dest={{shubao_go.script_home}}/conf  
+  template: src=oc-key dest={{shubao_go.script_home}}/conf
 
 - name: config crontab
   sudo: yes
@@ -69,32 +69,31 @@
 
 - name: chown -R apigateway:apigateway /opt/apigateway
   sudo: yes
-  shell: chown -R apigateway:apigateway {{shubao_go.home}}
+  shell: chown -R apigateway:apigateway {{shubao_go.home}}/shubao
 
 - name: chown -R apigateway:apigateway /var/log/apigateway
   sudo: yes
   shell: chown -R apigateway:apigateway {{common.apigateway_log}}
-  
+
 - name: restart crontab
   shell: service cron restart
-  sudo: yes  
+  sudo: yes
   
   ### upload the kms cert ###
 - name: upload the kms cert file
-  include: ./upload_cert.yml  
-  
+  include: ./upload_cert.yml
+
 ## check backup file exit
 - stat: path=/opt/{{common.user_apigateway}}/{{shubao_go.backup_name}}
   register: p_shubao_pkg
-  
+
 ### restor the config file ###
 - name: restore the config file
-  include: ./restore_config.yml  
+  include: ./restore_config.yml
   when:  p_shubao_pkg is defined and p_shubao_pkg.stat.exists
-  
+
 - name: restart shubao services
   shell: sh {{shubao_go.script_home}}/bin/shubao_monitor.sh restart
-  ignore_errors: true  
+  ignore_errors: true
   tags:
     - shubao_go_restart
-

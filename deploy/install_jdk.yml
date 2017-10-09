@@ -1,5 +1,4 @@
 - hosts: memcached
-  remote_user: '{{common.user_console}}'
   gather_facts: False   
   roles:
     - jdk
@@ -10,7 +9,6 @@
 - hosts: silvan
   gather_facts: False 
   serial: 1
-  remote_user: '{{common.user_console}}'
   roles:
     - jdk
     - silvan
@@ -20,7 +18,6 @@
     
 - hosts: asgard
   gather_facts: False    
-  remote_user: '{{common.user_apigateway}}'
   roles:
     - jdk
     - asgard
@@ -29,7 +26,6 @@
     - jdk_upgrade
    
 - hosts: kafka
-  remote_user: '{{common.user_apigateway}}'
   serial: 1  
   gather_facts: False 
   roles:
@@ -43,7 +39,6 @@
 - hosts: cassandra
   gather_facts: False 
   serial: 1
-  remote_user: '{{common.user_apigateway}}'
   roles:
     - jdk
     - cassandra
@@ -51,18 +46,16 @@
   tags:
     - jdk_upgrade    
     
-- hosts: shubao
+- hosts: [shubao_public,shubao_pod,shubao_tsz]
   gather_facts: False 
   serial: 1
-  remote_user: '{{common.user_apigateway}}'
   roles:
     - jdk
     - health_check    
   tags:
     - jdk_upgrade
     
-- hosts: nginx
-  remote_user: '{{common.user_console}}'
+- hosts: [shubao_nginx,shubao_pod_nginx,silvan_nginx]
   gather_facts: False   
   serial: 1
   roles:

@@ -1,31 +1,38 @@
 ---
-
-gaussdb_float_ip: x.x.x.x    
-    
+#The float ip of gaussdb
+gaussdb_float_ip: x.x.x.x
+#The float ip of apigateway nginx
 silvan_lb_float_ip: x.x.x.x
-
+#The float ip of LB
 shubao_lb_float_ip: x.x.x.x
-
+#The float ip of podLB
 pod_shubao_lb_float_ip: x.x.x.x
 
-#pod lb tenent address gateway eg:"100.125.0.1"
-pod_lb_gw: 100.125.0.1
-
-#external relay network segment eg:"100.64.0.0" 
+#eg:"100.125.0.1"
+pod_lb_gw: x.x.x.x
+#external relay network segment eg:"100.64.0.0"
 pod_lb_target_segment: 100.64.0.0
-
-#external relay network netmask eg:"255.192.0.0" 
-pod_lb_target_netmask: 255.192.0.0 
+#external relay network netmask eg:"255.192.0.0"
+pod_lb_target_netmask: 255.192.0.0
 
 # username & password & salt for oc alarm, please refer to apigateway install & upgrade document
 oc_username: apigw_oc_admin
-
 oc_password: DO0//ZqGEhvbDxYbNgaizg==
-
 oc_salt: B0489A259407FF6C176DB438B85387E4
-
 oc_key: 02eea1b632f6d51fa3bd32f7adb6391ce729f0bbd810a427f99fbfb51dfd5bfa
 
+#for high availability (multiple AZ)
+arb_enable: false
+arb_ip: x.x.x.x,x.x.x.x
+arb_port: 2379
+arb_primary_dc: dc001
+arb_standby_dc: dc002
+arb_username: arbiterClient
+arb_password: 
+arb_private_pwd:
+arb_keystore: 
+
+#for gaussdb backup configuration
 data_backup:
   upload_mode: 1   #0 means uds;1 means ftp
   uds:

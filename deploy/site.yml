@@ -1,22 +1,21 @@
 ---
-- hosts: common_apigateway
-  remote_user: '{{common.user_apigateway}}'
-  gather_facts: False  
-  roles:
-    - jdk
-  tags:
-    - jdk
-    
-- hosts: common_onframework
-  remote_user: '{{common.user_console}}'
+
+- hosts: silvan
   gather_facts: False
   roles:
-    - jdk
+    - silvan
   tags:
-    - jdk
+    - silvan
+
+- hosts: [shubao_nginx,shubao_pod_nginx,silvan_nginx]
+  gather_facts: False
+  roles:
+    - nginx
+    - ha
+  tags:
+    - nginx
 
 - hosts: memcached
-  remote_user: '{{common.user_console}}'
   gather_facts: False
   roles:
     - memcached
@@ -24,71 +23,30 @@
     - memcached
 
 - hosts: kafka
-  remote_user: '{{common.user_apigateway}}'
   gather_facts: False
   roles:
     - zookeeper
     - kafka
   tags:
     - mq
-    
+
 - hosts: cassandra
-  remote_user: '{{common.user_apigateway}}'
   gather_facts: False
   roles:
     - cassandra
     - etl
-    - cassandra_init
+    - { role: cassandra_init, when: "INIT_NODE == 'Y'" }
 
 - hosts: asgard
-  remote_user: '{{common.user_apigateway}}'
   gather_facts: False
   roles:
     - asgard
   tags:
     - asgard
 
-- hosts: shubao
-  remote_user: '{{common.user_apigateway}}'
+- hosts: [shubao_public,shubao_pod,shubao_tsz]
   gather_facts: False
-  roles:  
+  roles:
     - shubao_go
   tags:
     - shubao_go
- 
-- hosts: silvan
-  remote_user: '{{common.user_console}}'
-  gather_facts: False
-  roles:
-    - silvan
-  tags:
-    - silvan    
-
-- hosts: nginx
-  remote_user: '{{common.user_console}}'
-  roles:
-    - nginx
-  tags:
-    - nginx
-    
-- hosts: common_apigateway
-  remote_user: '{{common.user_apigateway}}'
-  gather_facts: False
-  roles:
-    - dns
-    - ntp
-    - common
-    - common_clean
-  tags:
-    - common
-    
-- hosts: common_onframework
-  remote_user: '{{common.user_console}}'
-  gather_facts: False
-  roles:
-    - dns
-    - ntp
-    - common
-    - common_clean
-  tags:
-    - common

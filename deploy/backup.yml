@@ -1,33 +1,27 @@
-     
 
-- hosts: shubao
-  remote_user: '{{common.user_apigateway}}'
+- hosts: [shubao_public,shubao_pod,shubao_tsz]
   gather_facts: False
   roles:
     - backup_shubao
 
 - hosts: asgard
-  remote_user: '{{common.user_apigateway}}'
   gather_facts: False 
   roles:
     - backup_asgard
     
 - hosts: cassandra
-  remote_user: '{{common.user_apigateway}}'
   gather_facts: False 
   roles:
     - backup_etl    
 
 - hosts: silvan
-  remote_user: '{{common.user_console}}'
   gather_facts: False  
   roles:
     - backup_silvan 
   tags:
     - backup_silvan     
 
-- hosts: nginx
+- hosts: [shubao_nginx,shubao_pod_nginx,silvan_nginx]
   gather_facts: False  
-  remote_user: '{{common.user_console}}'
   roles:
     - backup_nginx     

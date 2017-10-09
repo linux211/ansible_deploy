@@ -38,7 +38,8 @@
    - silvan-restore
 
 - name: wait for start
-  wait_for: host="{{ ansible_ssh_host }}" port={{silvan.sec_port}}
+  wait_for: host={{ ansible_ssh_host }} port={{silvan.sec_port}} timeout=60
+  ignore_errors: true
   tags:
     - start
 

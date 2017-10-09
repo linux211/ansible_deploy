@@ -1,0 +1,104 @@
+---
+- name: add onframework sudo no password
+  lineinfile: dest=/etc/sudoers regexp='^onframework ALL=NOPASSWD:ALL' line='onframework ALL=NOPASSWD:ALL'
+  sudo: yes
+
+- stat: path=/opt/{{common.user_console}}/ha
+  register: p
+  sudo: yes
+  tags:
+    - ha_uninstall
+
+- name: uninstall ha
+  shell: cd {{ha_nginx.make_dir}};  sh uninstall_all.sh
+  when:  p.stat.isdir is defined and p.stat.isdir
+  sudo: yes
+  ignore_errors: true
+  tags:
+    - ha_uninstall
+
+# remove the other record in /etc/sudoers
+- name: clean the sudoers file
+  shell: sed -i "/onframework ALL=(root) NOPASSWD/d" {{common.etc_sudoer_path}}
+  sudo: yes
+  tags:
+    - ha_uninstall
+
+  # 拷贝ha_nginx安装包
+- name: upload ha_nginx package
+  copy: src={{ha_nginx.pkg_dir}}/{{ha_nginx.pkg_name}} dest={{common.home_dir}} force=yes
+
+- name: untar
+  unarchive: src={{common.home_dir}}/{{ha_nginx.pkg_name}} dest={{ha_nginx.untar_dir}} copy=no
+
+- name:  config ha info
+  shell: sh /tmp/get_ha_info.sh config_ha
+  args:
+    chdir: /tmp
+  sudo: yes
+
+- name: install
+  shell: sh install_all.sh
+  sudo: yes
+  ignore_errors: true
+  args:
+    chdir: '{{ha_nginx.make_dir}}'
+
+  #为ha添加nginx的资源配置文件
+- name: upload nginx config
+  copy: src=nginx.xml dest={{ha_nginx.ha_resource_conf_path}}
+  sudo: yes
+
+  #配置仲裁信息
+- name: upload arb config
+  template: src=arb.properties dest={{ha_nginx.ha_config_arb_path}}
+  sudo: yes
+
+  # 重启ha
+- name: stop ha
+  shell: sh stop_ha.sh
+  sudo: yes
+  args:
+    chdir: '{{ha_nginx.ha_script_bin_path}}'
+  tags:
+    - ha_update
+    - stop_ha
+
+- name: start ha
+  shell: sh start_ha.sh
+  sudo: yes
+  ignore_errors: true
+  args:
+    chdir: '{{ha_nginx.ha_script_bin_path}}'
+  tags:
+    - ha_update
+
+- name: delete sudo NOPASSWORD
+  shell: sed -i "/{{common.user_console}} ALL=NOPASSWD:ALL/d" {{common.etc_sudoer_path}}
+  sudo: yes
+  tags:
+    - ha_uninstall
+
+  # restart nginx
+- name: restart nginx
+  sudo: yes
+  shell: ./nginx_monitor.sh restart
+  ignore_errors: true
+  args:
+    chdir: '{{nginx.bin_dir}}'
+  tags:
+    - restart
+
+- name: rm ha package
+  shell: rm -rf {{common.home_dir}}/{{ha_nginx.pkg_name}}
+  sudo: yes
+  tags:
+    - ha_uninstall
+
+- name: wait for the state of ha to be normal
+  action: shell /opt/{{common.user_console}}/ha/bin/QueryHaState
+  register: ha_status
+  until: ha_status.stdout.find("LOCAL_STATE=standby") != -1 or ha_status.stdout.find("LOCAL_STATE=active") != -1
+  retries: 20
+  delay: 5
+  sudo: yes

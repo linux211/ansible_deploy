@@ -1,0 +1,12 @@
+---
+
+- stat: path=/opt/{{common.user_console}}/ha
+  register: p_check
+  sudo: yes
+
+- name: get ha info
+  include: get_ha_info.yml
+
+- name: install component
+  include: install_ha.yml
+  when:  ( (is_check_installed is not defined) or (p_check.stat is not defined) or (p_check.stat.exists == false) )

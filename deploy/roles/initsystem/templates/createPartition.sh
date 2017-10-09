@@ -1,5 +1,5 @@
 #!/bin/bash
-  
+
 ######################################################################
 #   FUNCTION   : getCurPath
 #   DESCRIPTION: 获取该函数所在脚本的路径，并把该路径存在全局变量$PACKAGE_PATH中
@@ -17,7 +17,7 @@
 ######################################################################
 getCurPath()
 {
-  
+
     if [ "` dirname "$0" `" = "" ] || [ "` dirname "$0" `" = "." ]; then
         PACKAGE_PATH="`pwd`"
     else
@@ -27,12 +27,12 @@ getCurPath()
     fi
     echo $PACKAGE_PATH
 }
-curpath=$(getCurPath) 
+curpath=$(getCurPath)
 declare -r scriptName="createPartitions.sh"
 alias LOG_INFO='echoMessage [INFO] [$$] [${scriptName} ${LINENO}] '
 alias LOG_WARN='echoMessage [WARN] [$$] [${scriptName} ${LINENO}] '
 alias LOG_ERROR='echoMessage [ERROR] [$$] [${scriptName} ${LINENO}] '
-  
+
 # constant params
 P1_INDEX=1
 P2_INDEX=2
@@ -43,10 +43,10 @@ FATABL_FILE="/etc/fstab"
 LOGGER_PATH_FOLDER=/tmp/tool
 LOGGER_FILE=system.log
 LOGMAXSIZE=5120
-  
-#config the params  
+
+#config the params
 #notice: P1-Primary partition 1 ;P2-Primary partition 2;P3-Primary partition 3;P4-Extended partition 4,reserved
-#        P1_SIZE measure by M bytes  
+#        P1_SIZE measure by M bytes
 
 P1_SIZE=43G
 P1_FS_TYPE=ext3
@@ -120,25 +120,25 @@ logger()
 
     # 设定权限
     chmod 700 ${LOGGER_PATH_FOLDER}/
-    
-    local LOG_FULL_FILE_PATH=${LOGGER_PATH_FOLDER}/${LOGGER_FILE}    
+
+    local LOG_FULL_FILE_PATH=${LOGGER_PATH_FOLDER}/${LOGGER_FILE}
     local logsize=0
     if [ -e "$LOG_FULL_FILE_PATH" ]; then
         logsize=`ls -lk ${LOG_FULL_FILE_PATH} | awk -F " " '{print $5}'`
     fi
-    
+
     if [ "$logsize" -gt "$LOGMAXSIZE" ]; then
         # 每次删除10000行，约300K
         sed -i '1,10000d' $LOG_FULL_FILE_PATH
     fi
-    
+
     echo "[$(date -d today +"%Y-%m-%d %H:%M:%S %:::z")] $1" >> ${LOG_FULL_FILE_PATH} 2>/dev/null
     chmod 600 ${LOG_FULL_FILE_PATH}
 }
 
 ######################################################################
 #   FUNCTION   : init
-#   DESCRIPTION: 
+#   DESCRIPTION:
 #   CALLS      : N/A
 #   CALLED BY  : N/A
 #   INPUT      : N/A
@@ -159,7 +159,7 @@ init()
 
 ######################################################################
 #   FUNCTION   : getUnpartitionedDeviceName
-#   DESCRIPTION: 
+#   DESCRIPTION:
 #   CALLS      : N/A
 #   CALLED BY  : main
 #   INPUT      : N/A
@@ -185,7 +185,7 @@ getUnpartitionedDeviceName()
             fi
         done
         if [ -z $UNPARTITIONED_DEVICE_NAME ];then
-            LOG_INFO "the disk have no extra space,please insert a new one" 
+            LOG_INFO "the disk have no extra space,please insert a new one"
             exit 0
         fi
     fi
@@ -203,7 +203,7 @@ getUnpartitionedDeviceName()
 #   RETURN     : N/A
 #   DESCRIPTION：create a disk partition
 ######################################################################
-  
+
 createPartitions()
 {
 # Example: createPartitions 1 ext3 0G 43G
@@ -214,15 +214,15 @@ createPartitions()
         return 1
     }
     fi
-  
-    LOG_INFO "createPartitions for P${1} will Begin."  
+
+    LOG_INFO "createPartitions for P${1} will Begin."
     if [ $1 == 1 ];then
     parted -s ${UNPARTITIONED_DEVICE_NAME}  mklabel msdos
     fi
-    parted -s ${UNPARTITIONED_DEVICE_NAME}  mkpart primary  $2 $3 $4 
+    parted -s ${UNPARTITIONED_DEVICE_NAME}  mkpart primary  $2 $3 $4
     eval P${1}_NAME="${UNPARTITIONED_DEVICE_NAME}${1}"
     LOG_INFO "createPartitions for P${1} End."
- 
+
 }
 mkfs_tmp_mount()
 {
@@ -232,7 +232,7 @@ mkfs_tmp_mount()
         if [ $? == 0 ];then
         LOG_INFO "mkfs for $2 Success."
         mkdir -p $3
-        LOG_INFO "mount $2 temporarily" 
+        LOG_INFO "mount $2 temporarily"
         mount $2 $3 -o errors=panic
         else
             LOG_INFO "mkfs for $2 Faild."
@@ -245,7 +245,7 @@ Release_the_Catalog (){
     process_list=`lsof $1|egrep -v "$$|$sshd_proc_name"| awk '$2!~/PID/{print $2 }'|sort -n|uniq`
         if [ -n  "$process_list" ];then
 	    kill $process_list &>/dev/null||kill -9 $process_list &>/dev/null
-        fi      
+        fi
 }
 ######################################################################
 #   FUNCTION   : Transfer_Data
@@ -256,7 +256,7 @@ Release_the_Catalog (){
 #   LOCAL VAR  : N/A
 #   USE GLOBVAR: UNPARTITIONED_DEVICE_NAME ，P2_FS_TYPE，TMP_P1_MOUNT_PATH
 #   RETURN     : N/A
-#   DESCRIPTION：backup the data before mounting 
+#   DESCRIPTION：backup the data before mounting
 #                the disk that already exists
 ######################################################################
 
@@ -266,8 +266,8 @@ function Transfer_Data(){
     cd ~
     local MOUNT_PATH=$1
     local TMP_MOUNT_PATH=$2
-    Release_the_Catalog $MOUNT_PATH 
-    tar -cpf - -C  ${MOUNT_PATH}  ./  |tar -xf - -C ${TMP_MOUNT_PATH} && LOG_INFO "Transfer data for $1 Success!" 
+    Release_the_Catalog $MOUNT_PATH
+    tar -cpf - -C  ${MOUNT_PATH}  ./  |tar -xf - -C ${TMP_MOUNT_PATH} && LOG_INFO "Transfer data for $1 Success!"
     df -h |grep -q "${P_MOUNT_PATH}"
     if [ $? = 0 ];then
     umount $MOUNT_PATH
@@ -277,9 +277,9 @@ function Transfer_Data(){
         fi
     fi
     umount  ${TMP_MOUNT_PATH}
-    rmdir  ${TMP_MOUNT_PATH}   
+    rmdir  ${TMP_MOUNT_PATH}
     LOG_INFO "End Transfer_Data For ${1}."
-}  
+}
 
 ######################################################################
 #   FUNCTION   : MountPartition
@@ -323,7 +323,7 @@ MountPartition (){
 #   FUNCTION   : Start_Process
 #   CALLS      : N/A
 #   CALLED BY  : main
-#   INPUT      : 
+#   INPUT      :
 #   OUTPUT     : N/A
 #   LOCAL VAR  :
 #   USE GLOBVAR: N/A
@@ -354,7 +354,7 @@ function Start_Process()
 
     service cron stop||systemctl stop crond
     service ntp  stop||systemctl stop ntpd
-    Transfer_Data "$P1_MOUNT_PATH"  "$TMP_P1_MOUNT_PATH" 
+    Transfer_Data "$P1_MOUNT_PATH"  "$TMP_P1_MOUNT_PATH"
     Transfer_Data "$P2_MOUNT_PATH"  "$TMP_P2_MOUNT_PATH"
     MountPartition ${P1_NAME} ${P1_MOUNT_PATH} ${P1_FS_TYPE}
     MountPartition ${P2_NAME} ${P2_MOUNT_PATH} ${P2_FS_TYPE}
@@ -372,8 +372,8 @@ function Start_Process()
 #   LOCAL VAR  :
 #   USE GLOBVAR: N/A
 #   RETURN     : N/A
-#   DESCRIPTION：Check whether it is already mounted, 
-#                if there is then end, else start to mount disk 
+#   DESCRIPTION：Check whether it is already mounted,
+#                if there is then end, else start to mount disk
 ######################################################################
 
 Main_Process()
@@ -394,6 +394,6 @@ force)
 Start_Process;;
 *)
 shell_name=`basename $0`
-echo Usage:" sh $shell_name [normal|force]" 
+echo Usage:" sh $shell_name [normal|force]"
 esac
 exit 0

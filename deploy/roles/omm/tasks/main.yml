@@ -1,0 +1,11 @@
+---
+
+- stat: path=/opt/ServiceOM
+  register: ommdir
+  sudo: yes
+  tags:
+    - omm_uninstall
+
+- name: install component
+  include: ./install_omm_agent.yml
+  when: ( is_check_installed is not defined or ('{{is_check_installed|default(false)}}'== true and ommdir.stat.isdir is not defined))

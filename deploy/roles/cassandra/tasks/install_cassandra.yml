@@ -74,13 +74,4 @@
   args:
     chdir: '{{cassandra.bin_dir}}'
   tags:
-    - cassandra_restart
-    
-- name: wait for port
-  wait_for: host={{ansible_ssh_host}} port={{common.cassandra_port}}
-  delay: 10
-  tags:
-    - cassandra_restart   
-    
-    
-    
+    - cassandra_restart  

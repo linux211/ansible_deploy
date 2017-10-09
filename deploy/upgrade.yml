@@ -1,84 +1,60 @@
- 
+
 - hosts: memcached
-  remote_user: '{{common.user_console}}'
-  gather_facts: False  
+  gather_facts: False
   roles:
     - memcached
   tags:
     - memcached_upgrade
-    
+
 - hosts: kafka
-  remote_user: '{{common.user_apigateway}}'
   gather_facts: False
   roles:
     - kafka
-    
+
 - hosts: silvan
-  remote_user: '{{common.user_console}}'
   gather_facts: False
+  serial: 1
   roles:
     - silvan
   tags:
     - silvan_upgrade
 
 - hosts: asgard
-  remote_user: '{{common.user_apigateway}}'
   gather_facts: False
   roles:
     - asgard
   tags:
     - asgard_upgrade
-  
-- hosts: shubao
-  remote_user: '{{common.user_apigateway}}'
-  gather_facts: False  
+
+- hosts: [shubao_public,shubao_pod,shubao_tsz]
+  gather_facts: False
   serial: 2
   roles:
-    - apigateway  
+    - apigateway
     - tomcat
 
-- hosts: shubao
+- hosts: [shubao_public,shubao_pod,shubao_tsz]
   gather_facts: False
-  remote_user: '{{common.user_apigateway}}'
   serial: 2
   roles:
     - shubao_go
-  tags: 
-    - shubao_upgrade 
-      
-- hosts: nginx
-  remote_user: '{{common.user_console}}'
-  gather_facts: False  
+  tags:
+    - shubao_upgrade
+
+- hosts: cassandra
+  gather_facts: False
+  roles:
+    - etl
+  tags:
+    - cassandra_upgrade
+
+- hosts: [shubao_nginx,shubao_pod_nginx,silvan_nginx]
+  gather_facts: False
   serial: 1
   roles:
     - nginx
 
-- hosts: common_apigateway
-  remote_user: '{{common.user_apigateway}}'
-  gather_facts: False  
+- hosts: all
+  gather_facts: False
   roles:
-    - common
-    
-- hosts: common_onframework
-  remote_user: '{{common.user_console}}'
-  gather_facts: False  
-  roles:
-    - common
-
-- hosts: common_apigateway
-  remote_user: '{{common.user_apigateway}}'
-  gather_facts: False  
-  roles:
-    - common_clean
     - health_check
-  tags: 
-    - upgrade_common_clean    
-    
-- hosts: common_onframework
-  remote_user: '{{common.user_console}}'
-  gather_facts: False  
-  roles:
-    - common_clean 
-    - health_check    
-  tags: 
-    - upgrade_common_clean     

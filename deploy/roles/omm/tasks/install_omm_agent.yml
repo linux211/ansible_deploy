@@ -1,0 +1,84 @@
+---
+
+- name: Check if the uninstall script exists
+  stat: path=/opt/ServiceOM/omm/oma/workspace/setup/uninstall.sh
+  register: file_uninstall
+  sudo: yes
+  tags:
+    - omm_uninstall
+
+- name: uninstall OMM-Agent
+  shell: sh /opt/ServiceOM/omm/oma/workspace/setup/uninstall.sh
+  sudo: yes
+  when: file_uninstall.stat.isdir is defined
+  tags:
+    - omm_uninstall
+
+- name: clear the OMM-Agent dir
+  file: path=/opt/ServiceOM state=absent force=yes
+  sudo: yes
+  tags:
+    - omm_uninstall
+
+- name: disable the omm function of shubao nodes
+  lineinfile:
+    dest: "{{shubao_go.script_home}}/conf/shubao_app.json"
+    regexp: "^ +\"ommAlarmSwicth\":"
+    line:  '  \"ommAlarmSwicth\": false'
+  ignore_errors: true
+  when: "'shubao_public' in group_names or 'shubao_pod' in group_names or 'shubao_tsz' in group_names"
+  tags:
+    - omm_uninstall
+
+- name: disable the omm function of asgard nodes
+  lineinfile: dest={{asgard.config_file}} regexp='^omm.alarm.swicth=' line='omm.alarm.swicth=false'
+  ignore_errors: true
+  when: "'asgard' in group_names"
+  tags:
+    - omm_uninstall
+
+- name: disable the omm function of silvan nodes
+  lineinfile: dest={{silvan.config_file}} regexp='^omm.alarm.swicth=' line='omm.alarm.swicth=false'
+  ignore_errors: true
+  when: "'silvan' in group_names"
+  tags:
+    - omm_uninstall
+
+- name: create omm dir
+  file: path={{omm.upload_pkg_dir}} state=directory owner={{ansible_ssh_user}} group={{ansible_ssh_user}} mode=700
+  sudo: yes
+
+- name: upload omm package
+  copy: src={{omm.pkg_dir}}/{{omm.pkg_name}} dest={{omm.upload_pkg_dir}} force=yes
+
+- name: untar omm package
+  unarchive: src={{omm.upload_pkg_dir}}/{{omm.pkg_name}} dest={{omm.upload_pkg_dir}}  copy=no
+
+- name: install the OMM-Agent
+  shell: sh {{omm.upload_pkg_dir}}/ServiceOM_OMA_{{omm_agent_version}}/install.sh
+  sudo: yes
+
+- name: config LocalIP and OMMServerIP
+  shell: sh /opt/ServiceOM/omm/oma/tools/config_oma -IP "L={{ansible_ssh_host}} S={{ g_current_region.service_om.domain_name }}"
+  sudo: yes
+
+- name: clear the package dir
+  file: path={{omm.upload_pkg_dir}} state=absent force=yes
+  sudo: yes
+  tags:
+    - omm_uninstall
+
+- name: enable the omm function of shubao nodes
+  lineinfile:
+    dest: "{{shubao_go.script_home}}/conf/shubao_app.json"
+    regexp: "^ +\"ommAlarmSwicth\":"
+    line:  '  \"ommAlarmSwicth\": true'
+  when: "'shubao_public' in group_names or 'shubao_pod' in group_names or 'shubao_tsz' in group_names"
+
+- name: enable the omm function of asgard nodes
+  lineinfile: dest={{asgard.config_file}} regexp='^omm.alarm.swicth=' line='omm.alarm.swicth=true'
+  when: "'asgard' in group_names"
+
+- name: enable the omm function of silvan nodes
+  lineinfile: dest={{silvan.config_file}} regexp='^omm.alarm.swicth=' line='omm.alarm.swicth=true'
+  when: "'silvan' in group_names"

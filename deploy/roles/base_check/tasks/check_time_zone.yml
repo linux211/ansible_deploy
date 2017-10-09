@@ -3,6 +3,3 @@
   shell: date | awk '{print$5}'
   register: timezone_result
   sudo: yes
-
-- name: check timezone result
-  debug: msg="timezone result is {{timezone_result.stdout}}"

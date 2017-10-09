@@ -3,3 +3,4 @@ component: nginx
 nlbips: '{{silvan.ips}}'
 https_port: '{{silvan.sec_port}}'
 flag_type_pod: N
+ansible_ssh_user: '{{common.user_console}}'

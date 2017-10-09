@@ -19,7 +19,7 @@
   "userTokenCacheSize": 10000,
   "akForbidCacheSize": 10000,
   "akSkCacheSize": 10000,
-  "ces_switch": {{is_support_api_monitor}},
+  "ces_switch": true,
   "monitor_domain_token_switch":true,
   "monitor_deny":["op_service","op_svc"]
 }

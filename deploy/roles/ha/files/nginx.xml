@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<resources>
+    <resource name="nginx">
+        <depend name="exfloatip"/>
+        <weight value="10000"/>
+        <abnormal periods="3" count="3"/>
+        <monitor times="3" interval="10"/>
+        <reboot value="no"/>
+        <type value="active-null"/>
+        <script name="nginx.sh"/>
+        <actions>
+            <action name="status" timeout="120"/>
+            <action name="start" timeout="300"/>
+            <action name="stop" timeout="180"/>
+            <action name="repair" timeout="300"/>
+            <action name="notify" timeout="180" />
+        </actions>
+    </resource>
+</resources>

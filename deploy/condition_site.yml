@@ -1,14 +1,6 @@
 ---
-- hosts: common_apigateway
-  remote_user: '{{common.user_apigateway}}'
-  gather_facts: False 
-  roles:
-    - jdk
-  tags:
-    - jdk
-    
-- hosts: common_onframework
-  remote_user: '{{common.user_console}}'
+
+- hosts: all
   gather_facts: False
   roles:
     - jdk
@@ -16,7 +8,6 @@
     - jdk
 
 - hosts: memcached
-  remote_user: '{{common.user_console}}'
   gather_facts: False
   roles:
     - memcached
@@ -24,50 +15,34 @@
     - memcached
 
 - hosts: kafka
-  remote_user: '{{common.user_apigateway}}'
   gather_facts: False
   roles:
     - zookeeper
     - kafka
   tags:
     - mq
-    
+
 - hosts: asgard
-  remote_user: '{{common.user_apigateway}}'
   gather_facts: False
   roles:
     - asgard
   tags:
     - asgard
 
-- hosts: shubao
-  remote_user: '{{common.user_apigateway}}'
+- hosts: shubao_public;shubao_pod;shubao_tsz
   gather_facts: False
-  roles:  
+  roles:
     - shubao_go
   tags:
     - shubao_go
- 
-- hosts: nginx
-  remote_user: '{{common.user_console}}'
+
+- hosts: shubao_nginx;shubao_pod_nginx;silvan_nginx
   roles:
     - nginx
   tags:
     - nginx
-    
-- hosts: common_apigateway
-  remote_user: '{{common.user_apigateway}}'
-  gather_facts: False
-  roles:
-    - dns
-    - ntp
-    - common
-    - common_clean
-  tags:
-    - common
-    
-- hosts: common_onframework
-  remote_user: '{{common.user_console}}'
+
+- hosts: all
   gather_facts: False
   roles:
     - dns

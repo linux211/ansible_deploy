@@ -401,3 +401,25 @@ notifempty
 copytruncate
 missingok
 }
+/var/log/arb/logs/arb/arb.log {
+    su root
+    create 0600 apigateway apigateway
+    compress
+    size 5M
+    maxage {{log_remove_time_period}}
+    rotate {{log_remove_time_period}}
+    notifempty
+    copytruncate
+    missingok
+}
+/var/log/arb/zkArbMonitor.log {
+    su root
+    create 0644 root root
+    compress
+    size 50M
+    maxage {{log_remove_time_period}}
+    rotate {{log_remove_time_period}}
+    notifempty
+    copytruncate
+    missingok
+}

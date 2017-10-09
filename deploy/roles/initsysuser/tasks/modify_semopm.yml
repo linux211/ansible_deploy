@@ -1,10 +1,10 @@
 
 - name: get os type
   shell: egrep -o 'EulerOS|SUSE' /proc/version
-  sudo: yes 
+  sudo: yes
   register: os_type
 
 - name: modify EulerOS config
-  shell: echo  500 64000 64 512 > /proc/sys/kernel/sem; sed -i "/kernel.sem/d" /etc/sysctl.conf ; echo kernel.sem=500 64000 64 512 >> /etc/sysctl.conf ; sysctl -a
+  shell: echo  500 64000 64 512 > /proc/sys/kernel/sem; sed -i "/kernel.sem/d" /etc/sysctl.conf ; echo kernel.sem=500 64000 64 512 >> /etc/sysctl.conf ; sysctl -p
   when: ("{{os_type.stdout}}" == "EulerOS")
   sudo:  yes
